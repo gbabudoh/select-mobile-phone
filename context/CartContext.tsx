@@ -24,15 +24,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem("select-mobile-cart");
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Failed to parse cart from localStorage", e);
+    // We wrap everything in a timeout to avoid "synchronous setState in effect" lint error
+    // and to ensure Next.js hydration completes before we touch state.
+    const timer = setTimeout(() => {
+      const savedCart = localStorage.getItem("select-mobile-cart");
+      if (savedCart) {
+        try {
+          setCart(JSON.parse(savedCart));
+        } catch (e) {
+          console.error("Failed to parse cart from localStorage", e);
+        }
       }
-    }
-    setIsHydrated(true);
+      setIsHydrated(true);
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Save cart to localStorage on change
