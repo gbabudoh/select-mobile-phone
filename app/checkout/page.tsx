@@ -9,10 +9,12 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "../../context/CartContext";
+import { useSession } from "next-auth/react";
 import { Navigation } from "../../components/Navigation";
 
 export default function CheckoutPage() {
   const { cart, cartTotal, clearCart } = useCart();
+  const { data: session } = useSession();
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment, 3: Success
   const [formData, setFormData] = useState({
     name: "",
@@ -102,7 +104,16 @@ export default function CheckoutPage() {
               Your order has been successfully placed under <strong>Escrow Protection</strong>. You&apos;ll receive an email with tracking details shortly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/dashboard" className="px-8 py-4 rounded-2xl bg-[#0f172a] text-white font-black shadow-lg hover:shadow-[#0f172a]/20 transition-all cursor-pointer">
+              <Link 
+                href={
+                  session?.user?.role === "RETAILER" ? "/retailer/dashboard" :
+                  session?.user?.role === "WHOLESALER" ? "/wholesaler/dashboard" :
+                  session?.user?.role === "NETWORK_PROVIDER" ? "/network-provider/dashboard" :
+                  session?.user?.role === "INDIVIDUAL_SELLER" ? "/individual/dashboard" :
+                  "/buyer/dashboard"
+                } 
+                className="px-8 py-4 rounded-2xl bg-[#0f172a] text-white font-black shadow-lg hover:shadow-[#0f172a]/20 transition-all cursor-pointer"
+              >
                 Go to Dashboard
               </Link>
               <Link href="/normal-order" className="px-8 py-4 rounded-2xl bg-white border border-gray-100 text-[#0f172a] font-black hover:bg-gray-50 transition-all cursor-pointer">

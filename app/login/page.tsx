@@ -12,7 +12,7 @@ import {
   LogIn
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -44,7 +44,18 @@ export default function LoginPage() {
         throw new Error("Invalid credentials");
       }
 
-      router.push("/dashboard");
+      // Fetch the updated session to get the user role
+      const session = await getSession();
+      const role = (session?.user as { role?: string })?.role;
+
+      // Determine redirect path based on role
+      let dashboardPath = "/buyer/dashboard";
+      if (role === "RETAILER") dashboardPath = "/retailer/dashboard";
+      else if (role === "WHOLESALER") dashboardPath = "/wholesaler/dashboard";
+      else if (role === "NETWORK_PROVIDER") dashboardPath = "/network-provider/dashboard";
+      else if (role === "INDIVIDUAL_SELLER") dashboardPath = "/individual/dashboard";
+
+      router.push(dashboardPath);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

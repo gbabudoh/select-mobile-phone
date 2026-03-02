@@ -386,7 +386,14 @@ export default function RegisterPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push("/dashboard")}
+                  onClick={() => {
+                    let dashboardPath = "/buyer/dashboard";
+                    if (selectedRole === "RETAILER") dashboardPath = "/retailer/dashboard";
+                    else if (selectedRole === "WHOLESALER") dashboardPath = "/wholesaler/dashboard";
+                    else if (selectedRole === "NETWORK_PROVIDER") dashboardPath = "/network-provider/dashboard";
+                    else if (selectedRole === "INDIVIDUAL_SELLER") dashboardPath = "/individual/dashboard";
+                    router.push(dashboardPath);
+                  }}
                   className="px-8 py-5 bg-[#04a1c6] text-white font-black rounded-3xl shadow-xl cursor-pointer uppercase tracking-tighter"
                 >
                   Go to Dashboard

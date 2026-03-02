@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeftRight, ChevronRight, Lock, Zap, ShieldCheck } from "lucide-react";
 import { Navigation } from "../../components/Navigation";
@@ -22,7 +22,10 @@ const CONDITIONS = [
   { label: "Fair", key: "USED_FAIR", multiplier: 0.6 },
 ];
 
+import { useSession } from "next-auth/react";
+
 export default function TradeInPage() {
+  const { data: session } = useSession();
   const [selectedDevice, setSelectedDevice] = useState("");
   const [condition, setCondition] = useState("");
   const [imei, setImei] = useState("");
@@ -233,7 +236,15 @@ export default function TradeInPage() {
                   Sign in to track your trade-in and apply it toward a purchase.
                 </p>
                 <div className="flex gap-3 justify-center">
-                  <Link href="/dashboard/trade-ins">
+                  <Link 
+                    href={
+                      session?.user?.role === "RETAILER" ? "/retailer/dashboard" :
+                      session?.user?.role === "WHOLESALER" ? "/wholesaler/dashboard" :
+                      session?.user?.role === "NETWORK_PROVIDER" ? "/network-provider/dashboard" :
+                      session?.user?.role === "INDIVIDUAL_SELLER" ? "/individual/dashboard" :
+                      "/buyer/dashboard"
+                    }
+                  >
                     <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#04a1c6] text-white font-semibold text-sm cursor-pointer shadow-lg shadow-[#04a1c6]/20">
                       View in Dashboard <ChevronRight className="w-4 h-4" />
                     </span>

@@ -1,10 +1,11 @@
 "use client";
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-const stagger = {
+const stagger: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -12,9 +13,9 @@ const stagger = {
   },
 };
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
 };
 
 const NAV_COLS = [
@@ -87,6 +88,17 @@ const SOCIALS = [
 ];
 
 export function Footer() {
+  const pathname = usePathname();
+  const isDashboard = pathname ? (
+    pathname.startsWith("/buyer/dashboard") || 
+    pathname.startsWith("/retailer/dashboard") || 
+    pathname.startsWith("/wholesaler/dashboard") || 
+    pathname.startsWith("/network-provider/dashboard") || 
+    pathname.startsWith("/individual/dashboard")
+  ) : false;
+
+  if (isDashboard) return null;
+
   return (
     <footer className="relative mt-24 overflow-hidden">
       {/* Animated gradient top border */}

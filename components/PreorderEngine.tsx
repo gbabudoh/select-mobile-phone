@@ -6,6 +6,10 @@ import {
   ChevronRight, X, Zap, Lock, Bell, BarChart3, Truck,
   Search, SlidersHorizontal, BadgeCheck, Package
 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import Image from "next/image";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -203,6 +207,8 @@ export function PreorderEngine() {
   const [selectedCampaign, setSelectedCampaign] = useState<PreorderCampaign | null>(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [showTradeIn, setShowTradeIn] = useState(false);
+  const { data: session } = useSession();
+  const router = useRouter();
 
   // Filters
   const [search, setSearch] = useState("");
@@ -472,6 +478,8 @@ export function PreorderEngine() {
               showTradeIn={showTradeIn}
               setShowTradeIn={setShowTradeIn}
               onClose={() => setSelectedCampaign(null)}
+              session={session}
+              router={router}
             />
           )}
         </AnimatePresence>
@@ -505,7 +513,7 @@ function CampaignCard({
       <div className="flex flex-col sm:flex-row">
         {/* Image */}
         <div className="sm:w-2/5 relative aspect-square sm:aspect-auto bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden min-h-[200px]">
-          <img src={campaign.image} alt={campaign.product} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <Image src={campaign.image} alt={campaign.product} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
           <div className="absolute top-4 left-4 flex flex-col gap-1.5">
             <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg ${
               campaign.tier === "flagship" ? "bg-purple-600 text-white" :
@@ -597,7 +605,7 @@ function CampaignCard({
 // ─── Campaign Detail Modal ──────────────────────────────────────────────────
 
 function CampaignModal({
-  campaign, selectedColor, setSelectedColor, showTradeIn, setShowTradeIn, onClose,
+  campaign, selectedColor, setSelectedColor, showTradeIn, setShowTradeIn, onClose, session, router,
 }: {
   campaign: PreorderCampaign;
   selectedColor: number;
@@ -605,11 +613,52 @@ function CampaignModal({
   showTradeIn: boolean;
   setShowTradeIn: (v: boolean) => void;
   onClose: () => void;
+  session: { user?: { id: string } } | null;
+  router: AppRouterInstance;
 }) {
   const [selectedNetwork, setSelectedNetwork] = useState(0);
+  const [reserving, setReserving] = useState(false);
+  const [reserved, setReserved] = useState<{ queuePosition: number; id: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const pct = Math.round((campaign.slotsFilled / campaign.maxSlots) * 100);
   const slotsLeft = campaign.maxSlots - campaign.slotsFilled;
   const meta = SELLER_META[campaign.seller.type];
+
+  const handleReserve = async () => {
+    if (!session?.user) {
+      router.push("/login?callbackUrl=/preorder");
+      return;
+    }
+
+    setReserving(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/preorders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          campaignId: campaign.id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to reserve");
+      }
+
+      setReserved({
+        queuePosition: data.preorder.queuePosition,
+        id: data.preorder.id,
+      });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setReserving(false);
+    }
+  };
 
   return (
     <motion.div
@@ -630,7 +679,7 @@ function CampaignModal({
         <div className="flex flex-col lg:flex-row">
           {/* Left — Image */}
           <div className="lg:w-[40%] relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none min-h-[300px]">
-            <img src={campaign.image} alt={campaign.product} className="w-full h-full object-cover" />
+            <Image src={campaign.image} alt={campaign.product} fill className="object-cover" />
             <div className="absolute top-6 left-6">
               <span className="px-4 py-2 rounded-2xl bg-purple-600 text-white text-xs font-black uppercase tracking-widest shadow-xl">⭐ Preorder</span>
             </div>
@@ -817,19 +866,77 @@ function CampaignModal({
             )}
 
             {/* CTAs */}
-            <div className="flex gap-3 mt-auto">
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                className="flex-[2] py-4 rounded-2xl bg-purple-600 text-white font-black text-sm uppercase tracking-widest hover:bg-purple-700 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xl shadow-purple-500/20"
+            {reserved ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center"
               >
-                <Lock className="w-4 h-4" /> Reserve — ${campaign.deposit} Deposit
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                className="py-4 px-5 rounded-2xl border-2 border-gray-200 text-[#0f172a]/60 hover:border-purple-300 hover:text-purple-600 transition-colors cursor-pointer"
-                aria-label="Get notified"
-              >
-                <Bell className="w-5 h-5" />
-              </motion.button>
-            </div>
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                  <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                </div>
+                <h3 className="text-lg font-black text-emerald-800 mb-1">You&apos;re In the Queue</h3>
+                <p className="text-sm text-emerald-600 mb-3">
+                  Position <span className="font-black">#{reserved.queuePosition}</span> · Deposit of ${campaign.deposit} secured
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => {
+                      const role = (session?.user as { role?: string })?.role;
+                      let dashboardPath = "/buyer/dashboard/preorders";
+                      if (role === "RETAILER") dashboardPath = "/retailer/dashboard";
+                      else if (role === "WHOLESALER") dashboardPath = "/wholesaler/dashboard";
+                      else if (role === "NETWORK_PROVIDER") dashboardPath = "/network-provider/dashboard";
+                      else if (role === "INDIVIDUAL_SELLER") dashboardPath = "/individual/dashboard";
+                      router.push(dashboardPath);
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold cursor-pointer hover:bg-emerald-700 transition-colors"
+                  >
+                    View in Dashboard
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="px-5 py-2.5 rounded-xl border border-emerald-200 text-emerald-700 text-sm font-bold cursor-pointer hover:bg-emerald-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <>
+                {error && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-600 font-medium mb-3">
+                    {error}
+                  </div>
+                )}
+                <div className="flex gap-3 mt-auto">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleReserve}
+                    disabled={reserving}
+                    className="flex-[2] py-4 rounded-2xl bg-purple-600 text-white font-black text-sm uppercase tracking-widest hover:bg-purple-700 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xl shadow-purple-500/20 disabled:opacity-50"
+                  >
+                    {reserving ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Reserving...
+                      </span>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" /> Reserve — ${campaign.deposit} Deposit
+                      </>
+                    )}
+                  </motion.button>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    className="py-4 px-5 rounded-2xl border-2 border-gray-200 text-[#0f172a]/60 hover:border-purple-300 hover:text-purple-600 transition-colors cursor-pointer"
+                    aria-label="Get notified"
+                  >
+                    <Bell className="w-5 h-5" />
+                  </motion.button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </motion.div>

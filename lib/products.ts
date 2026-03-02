@@ -17,6 +17,7 @@ export interface Product {
   planDetails?: { data: string; talk: string; text: string; contract: string };
   diagnosticScore?: number;
   specs?: Record<string, string>;
+  colors?: { name: string; hex: string }[];
   shipping: string;
   inStock: boolean;
   country: "US" | "CA" | "US/CA";
@@ -31,6 +32,7 @@ export const PRODUCTS: Product[] = [
     isSelectVerified: true, diagnosticScore: 50, shipping: "Free 2-Day",
     inStock: true, country: "US/CA", tags: ["5G", "Dual eSIM", "Titanium", "Bulk"],
     specs: { Storage: "256GB", RAM: "8GB", Display: "6.3\" OLED", Chip: "A20 Pro" },
+    colors: [{ name: "Natural Titanium", hex: "#8a8680" }, { name: "Blue Titanium", hex: "#3d4f5f" }, { name: "White Titanium", hex: "#f0ede8" }, { name: "Black Titanium", hex: "#2c2c2e" }],
     bulkAvailable: true, minOrderQty: 10,
   },
   {
@@ -40,6 +42,7 @@ export const PRODUCTS: Product[] = [
     isSelectVerified: true, diagnosticScore: 50, shipping: "Free 2-Day",
     inStock: true, country: "US/CA", tags: ["5G", "S Pen", "200MP Camera"],
     specs: { Storage: "512GB", RAM: "12GB", Display: "6.9\" AMOLED", Chip: "Snapdragon 8 Gen 5" },
+    colors: [{ name: "Titanium Silver", hex: "#c0c0c0" }, { name: "Titanium Black", hex: "#1a1a1a" }, { name: "Titanium Blue", hex: "#4a6fa5" }],
   },
   {
     id: "3", name: "Pixel 10 Pro 256GB", brand: "Google", category: "HANDSET",
@@ -48,6 +51,7 @@ export const PRODUCTS: Product[] = [
     isSelectVerified: true, diagnosticScore: 48, shipping: "Free 2-Day",
     inStock: true, country: "US", tags: ["5G", "AI Camera", "Tensor G5"],
     specs: { Storage: "256GB", RAM: "12GB", Display: "6.3\" LTPO", Chip: "Tensor G5" },
+    colors: [{ name: "Porcelain", hex: "#f5f0e8" }, { name: "Obsidian", hex: "#1a1a1a" }, { name: "Wintergreen", hex: "#a8c5b8" }],
   },
   {
     id: "4", name: "iPhone 17 Pro 128GB", brand: "Apple", category: "HANDSET",
@@ -56,6 +60,7 @@ export const PRODUCTS: Product[] = [
     isSelectVerified: true, diagnosticScore: 47, shipping: "Free 2-Day",
     inStock: true, country: "US/CA", tags: ["5G", "Certified", "Like New"],
     specs: { Storage: "128GB", RAM: "8GB", Display: "6.1\" OLED", Chip: "A19 Pro" },
+    colors: [{ name: "Natural Titanium", hex: "#8a8680" }, { name: "Black Titanium", hex: "#2c2c2e" }],
   },
   {
     id: "5", name: "Galaxy S25 FE 256GB", brand: "Samsung", category: "HANDSET",
@@ -64,6 +69,7 @@ export const PRODUCTS: Product[] = [
     isSelectVerified: true, diagnosticScore: 45, shipping: "Standard 5-Day",
     inStock: true, country: "CA", tags: ["5G", "Budget", "Great Value"],
     specs: { Storage: "256GB", RAM: "8GB", Display: "6.7\" AMOLED", Chip: "Exynos 2500" },
+    colors: [{ name: "Graphite", hex: "#3a3a3a" }, { name: "Cream", hex: "#f5f0e0" }],
   },
   {
     id: "6", name: "MagSafe Charger Pro Stand", brand: "Apple", category: "ACCESSORY",
@@ -71,6 +77,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.5, reviews: 203, seller: "AccessoryWorld", sellerType: "Retailer",
     isSelectVerified: true, shipping: "Free 2-Day",
     inStock: true, country: "US/CA", tags: ["MagSafe", "Wireless", "Fast Charge"],
+    colors: [{ name: "White", hex: "#f5f5f5" }, { name: "Black", hex: "#1a1a1a" }],
   },
   {
     id: "7", name: "AirPods Pro 3", brand: "Apple", category: "ACCESSORY",
@@ -78,6 +85,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.8, reviews: 512, seller: "TechWholesale Inc.", sellerType: "Wholesaler",
     isSelectVerified: true, shipping: "Free 2-Day",
     inStock: true, country: "US/CA", tags: ["ANC", "Spatial Audio", "USB-C", "Bulk"],
+    colors: [{ name: "White", hex: "#f5f5f5" }],
     bulkAvailable: true, minOrderQty: 25,
   },
   {
@@ -95,6 +103,7 @@ export const PRODUCTS: Product[] = [
     isSelectVerified: true, diagnosticScore: 49, shipping: "Free 2-Day",
     inStock: true, country: "US", tags: ["5G", "120W Charge", "Hasselblad"],
     specs: { Storage: "256GB", RAM: "16GB", Display: "6.8\" LTPO", Chip: "Snapdragon 8 Gen 5" },
+    colors: [{ name: "Flowy Emerald", hex: "#2d6a4f" }, { name: "Silky Black", hex: "#1a1a1a" }],
   },
   {
     id: "10", name: "Samsung Galaxy Buds4 Pro", brand: "Samsung", category: "ACCESSORY",
@@ -102,6 +111,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.6, reviews: 189, seller: "MobileHub Retail", sellerType: "Retailer",
     isSelectVerified: true, shipping: "Free 2-Day",
     inStock: true, country: "US/CA", tags: ["ANC", "360 Audio", "IPX7"],
+    colors: [{ name: "Graphite", hex: "#3a3a3a" }, { name: "White", hex: "#f5f5f5" }, { name: "Bora Purple", hex: "#8b6fa5" }],
   },
   {
     id: "11", name: "Mint Mobile 5GB BYOP Plan", brand: "Mint Mobile", category: "ESIM_PLAN",

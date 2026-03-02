@@ -22,6 +22,7 @@ export default function ProductPage() {
   const { addToCart } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWished, setIsWished] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(0);
 
   const similarProducts = useMemo(() => {
     if (!product) return [];
@@ -140,6 +141,40 @@ export default function ProductPage() {
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 cursor-pointer" /> {product.inStock ? "In Stock" : "Out of Stock"}
                 </div>
               </div>
+
+              {/* Color Selection */}
+              {product.colors && product.colors.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-black text-[#0f172a]/40 uppercase tracking-widest">Color</span>
+                    <span className="text-xs font-bold text-[#0f172a]/60">{product.colors[selectedColor].name}</span>
+                  </div>
+                  <div className="flex gap-3">
+                    {product.colors.map((color, idx) => (
+                      <button
+                        key={color.name}
+                        onClick={() => setSelectedColor(idx)}
+                        aria-label={`Select ${color.name}`}
+                        aria-pressed={selectedColor === idx}
+                        className={`relative w-10 h-10 rounded-full cursor-pointer transition-all ${
+                          selectedColor === idx
+                            ? "ring-2 ring-[#04a1c6] ring-offset-2 scale-110"
+                            : "ring-1 ring-gray-200 hover:ring-gray-300 hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: color.hex }}
+                      >
+                        {selectedColor === idx && (
+                          <CheckCircle2 className={`absolute inset-0 m-auto w-4 h-4 ${
+                            ["#f5f5f5", "#f0ede8", "#f5f0e8", "#f5f0e0", "#c0c0c0", "#a8c5b8"].includes(color.hex)
+                              ? "text-[#0f172a]/60"
+                              : "text-white"
+                          }`} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Price Panel */}
               <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white shadow-2xl relative overflow-hidden group">
