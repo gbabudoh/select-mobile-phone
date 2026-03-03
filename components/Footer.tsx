@@ -189,9 +189,9 @@ export function Footer() {
           >
             <p>&copy; 2026 Select Mobile Inc. All rights reserved.</p>
             <div className="flex gap-6">
-              <Link href="#" className="hover:text-[#04a1c6] transition-colors">Privacy</Link>
-              <Link href="#" className="hover:text-[#04a1c6] transition-colors">Terms</Link>
-              <Link href="#" className="hover:text-[#04a1c6] transition-colors">Cookies</Link>
+              <Link href="/privacy" className="hover:text-[#04a1c6] transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-[#04a1c6] transition-colors">Terms</Link>
+              <Link href="/cookies" className="hover:text-[#04a1c6] transition-colors">Cookies</Link>
             </div>
           </motion.div>
         </motion.div>

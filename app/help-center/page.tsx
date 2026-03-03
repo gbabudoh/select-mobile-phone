@@ -91,7 +91,7 @@ export default function HelpCenterPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { icon: Phone, title: "Call Us", desc: "+1 (212) 555-0100", sub: "Mon-Fri 9AM-6PM ET", href: "/contact" },
-              { icon: Mail, title: "Email Support", desc: "support@selectmobile.com", sub: "24-hour response time", href: "/contact" },
+              { icon: Mail, title: "Email Support", desc: "support@selectmobilephone.com", sub: "24-hour response time", href: "/contact" },
               { icon: MessageSquare, title: "Live Chat", desc: "Chat with our team", sub: "Available 24/7", href: "/contact" },
             ].map((item, idx) => (
               <Link key={idx} href={item.href}>

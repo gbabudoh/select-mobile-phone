@@ -58,9 +58,9 @@ export default function ContactPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Mail, title: "Email", value: "hello@selectmobile.com", sub: "General Inquiries" },
+              { icon: Mail, title: "Email", value: "hello@selectmobilephone.com", sub: "General Inquiries" },
               { icon: Phone, title: "Phone", value: "+1 (212) 555-0100", sub: "Mon-Fri 9AM-6PM ET" },
-              { icon: Headphones, title: "Support", value: "support@selectmobile.com", sub: "24/7 Help Center" },
+              { icon: Headphones, title: "Support", value: "support@selectmobilephone.com", sub: "24/7 Help Center" },
             ].map((item, idx) => (
               <motion.div
                 key={idx}
