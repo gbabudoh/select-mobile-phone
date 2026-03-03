@@ -31,19 +31,19 @@ const NAV_COLS = [
   {
     heading: "Company",
     links: [
-      { label: "About", href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Press", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "About", href: "/about" },
+      { label: "Careers", href: "/careers" },
+      { label: "Press", href: "/press" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {
     heading: "Support",
     links: [
-      { label: "Help Center", href: "#" },
-      { label: "Escrow Policy", href: "#" },
-      { label: "Shipping Info", href: "#" },
-      { label: "Returns", href: "#" },
+      { label: "Help Center", href: "/help-center" },
+      { label: "Escrow Policy", href: "/escrow-policy" },
+      { label: "Shipping Info", href: "/shipping-info" },
+      { label: "Returns", href: "/returns" },
     ],
   },
 ];
