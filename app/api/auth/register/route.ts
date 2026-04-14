@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
-import { UserRole } from "@/app/generated/prisma/enums";
+import { UserRole } from "@generated/prisma/client";
 
 export async function POST(req: Request) {
   try {

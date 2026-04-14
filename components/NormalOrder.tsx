@@ -49,10 +49,11 @@ export function NormalOrder() {
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
 
-  // Reset page whenever any filter changes
-  useEffect(() => {
+  // Helper to update filters and reset pagination
+  const updateFilter = <T,>(setter: (val: T) => void, value: T) => {
+    setter(value);
     setPage(1);
-  }, [search, category, brand, condition, country, sellerType, sort, minPrice, maxPrice]);
+  };
 
   const filtered = useMemo(() => {
     const result = [...PRODUCTS].filter((p) => {
@@ -99,6 +100,7 @@ export function NormalOrder() {
     setSellerType("All");
     setMinPrice("");
     setMaxPrice("");
+    setPage(1);
   }
 
   return (
@@ -160,7 +162,7 @@ export function NormalOrder() {
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.key}
-                  onClick={() => setCategory(cat.key)}
+                  onClick={() => updateFilter(setCategory, cat.key)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
                     category === cat.key
                       ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-md shadow-[#04a1c6]/20"
@@ -193,7 +195,7 @@ export function NormalOrder() {
                 return (
                   <button
                     key={st}
-                    onClick={() => setSellerType(st)}
+                    onClick={() => updateFilter(setSellerType, st)}
                     className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
                       sellerType === st
                         ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-md shadow-[#04a1c6]/20"
@@ -219,12 +221,12 @@ export function NormalOrder() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateFilter(setSearch, e.target.value)}
               placeholder="Search phones, accessories, plans..."
               className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#04a1c6]/30 focus:border-[#04a1c6]/30 shadow-sm"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full cursor-pointer">
+              <button onClick={() => updateFilter(setSearch, "")} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full cursor-pointer">
                 <X className="w-3.5 h-3.5 text-gray-400" />
               </button>
             )}
@@ -246,7 +248,7 @@ export function NormalOrder() {
           <div className="relative">
             <select
               value={sort}
-              onChange={(e) => setSort(e.target.value)}
+              onChange={(e) => updateFilter(setSort, e.target.value)}
               className="appearance-none px-5 py-3.5 pr-10 rounded-xl border border-gray-200 bg-white text-sm text-[#0f172a]/70 font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#04a1c6]/30 shadow-sm"
             >
               {SORT_OPTIONS.map((opt) => (
@@ -279,7 +281,7 @@ export function NormalOrder() {
                         min={0}
                         placeholder="Min"
                         value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
+                        onChange={(e) => updateFilter(setMinPrice, e.target.value)}
                         className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#04a1c6]/30 focus:border-[#04a1c6]/30"
                       />
                     </div>
@@ -291,13 +293,13 @@ export function NormalOrder() {
                         min={0}
                         placeholder="Max"
                         value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
+                        onChange={(e) => updateFilter(setMaxPrice, e.target.value)}
                         className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#04a1c6]/30 focus:border-[#04a1c6]/30"
                       />
                     </div>
                     {(minPrice !== "" || maxPrice !== "") && (
                       <button
-                        onClick={() => { setMinPrice(""); setMaxPrice(""); }}
+                        onClick={() => { setMinPrice(""); setMaxPrice(""); setPage(1); }}
                         className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer text-gray-400 hover:text-gray-600"
                       >
                         <X className="w-4 h-4" />
@@ -310,9 +312,9 @@ export function NormalOrder() {
 
                 {/* Other filters */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <FilterSelect label="Brand" value={brand} onChange={setBrand} options={BRANDS} />
-                  <FilterSelect label="Condition" value={condition} onChange={setCondition} options={CONDITIONS} />
-                  <FilterSelect label="Region" value={country} onChange={setCountry} options={COUNTRIES} />
+                  <FilterSelect label="Brand" value={brand} onChange={(v) => updateFilter(setBrand, v)} options={BRANDS} />
+                  <FilterSelect label="Condition" value={condition} onChange={(v) => updateFilter(setCondition, v)} options={CONDITIONS} />
+                  <FilterSelect label="Region" value={country} onChange={(v) => updateFilter(setCountry, v)} options={COUNTRIES} />
                 </div>
               </div>
             </motion.div>

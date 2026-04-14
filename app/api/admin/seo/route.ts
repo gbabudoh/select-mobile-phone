@@ -2,19 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-guard";
 
-// GET — List all SEO configs
-export async function GET() {
-  const { error } = await requireAdmin();
-  if (error) return error;
+// GET — List SEO configs (public — consumed by DynamicSEO on every page)
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const pagePath = searchParams.get("pagePath");
 
   try {
+    if (pagePath) {
+      const seo = await prisma.seoMeta.findUnique({
+        where: { pagePath },
+      });
+      return NextResponse.json({ seo });
+    }
+
     const seoConfigs = await prisma.seoMeta.findMany({
       orderBy: { pagePath: "asc" },
     });
-    return NextResponse.json(seoConfigs);
+    return NextResponse.json({ seoConfigs });
   } catch (err) {
     console.error("SEO GET error:", err);
-    return NextResponse.json({ error: "Failed to fetch SEO configs" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch SEO config" }, { status: 500 });
   }
 }
 

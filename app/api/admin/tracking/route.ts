@@ -2,17 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-guard";
 
-// GET — Fetch tracking configs
+// GET — Fetch tracking configs (public — consumed by TrackingScripts on every page)
 export async function GET() {
-  const { error } = await requireAdmin();
-  if (error) return error;
-
   try {
     const configs = await prisma.trackingConfig.findMany();
-    return NextResponse.json(configs);
+    return NextResponse.json({ configs });
   } catch (err) {
     console.error("Tracking GET error:", err);
-    return NextResponse.json({ error: "Failed to fetch tracking configs" }, { status: 500 });
+    return NextResponse.json({ configs: [] });
   }
 }
 

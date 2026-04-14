@@ -182,29 +182,49 @@ export default function WholesalerInventoryPage() {
     setUploadProgress(0);
   };
 
-  const handleFileUpload = () => {
-    setImportStep("uploading");
-    
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setImportStep("success");
-          
-          // Add dummy imported items
-          setTimeout(() => {
-            const newItems: InventoryItem[] = [];
-            setInventory(prev => [...newItems, ...prev]);
-            setIsImportModalOpen(false);
-            addToast("Batch import successful: 500 units added", "success");
-          }, 1500);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-          return 100;
-        }
-        return prev + 10;
+    setImportStep("uploading");
+    setUploadProgress(10);
+    
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "inventory-manifests");
+
+      // We'll use a simple fetch here, as progress monitoring requires XHR or a specialized hook
+      // For now, we simulate progress while waiting for the response
+      const progressTimer = setInterval(() => {
+        setUploadProgress(prev => (prev < 90 ? prev + 5 : prev));
+      }, 300);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
-    }, 200);
+
+      clearInterval(progressTimer);
+      
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      setUploadProgress(100);
+      setImportStep("success");
+      
+      // Successfully uploaded to Minio at data.url
+      // In a real app, we'd now trigger a background task to process the CSV
+      setTimeout(() => {
+        setIsImportModalOpen(false);
+        addToast(`Batch ${file.name} uploaded to storage`, "success");
+      }, 1500);
+
+    } catch (error) {
+      console.error("Upload error:", error);
+      setImportStep("idle");
+      addToast("Failed to upload manifest to storage", "error");
+    }
   };
 
   const handleManageSubmit = (e: React.FormEvent) => {
@@ -686,19 +706,28 @@ export default function WholesalerInventoryPage() {
               </div>
 
               {importStep === "idle" && (
-                <div 
-                  className="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-[2rem] p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all group"
-                  onClick={handleFileUpload}
-                >
-                  <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform border border-blue-100">
-                    <UploadCloud className="w-10 h-10 text-blue-500" />
-                  </div>
-                  <h4 className="text-xl font-extrabold text-[#0f172a] mb-2">Click or drag file here</h4>
-                  <p className="text-slate-500 font-medium text-sm mb-6">Supports .csv, .xlsx, .xls up to 50MB</p>
-                  
-                  <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
-                    <FileSpreadsheet className="w-4 h-4" /> Download Template
-                  </div>
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="manifest-upload"
+                    className="hidden"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={handleFileUpload}
+                  />
+                  <label 
+                    htmlFor="manifest-upload"
+                    className="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-[2rem] p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all group"
+                  >
+                    <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform border border-blue-100">
+                      <UploadCloud className="w-10 h-10 text-blue-500" />
+                    </div>
+                    <h4 className="text-xl font-extrabold text-[#0f172a] mb-2">Click or drag file here</h4>
+                    <p className="text-slate-500 font-medium text-sm mb-6">Supports .csv, .xlsx, .xls up to 50MB</p>
+                    
+                    <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+                      <FileSpreadsheet className="w-4 h-4" /> Download Template
+                    </div>
+                  </label>
                 </div>
               )}
 

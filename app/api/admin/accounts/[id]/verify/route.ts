@@ -65,6 +65,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
     }
 
+    // Trigger Novu notification
+    try {
+      const user = await prisma.user.findUnique({ where: { id }, select: { name: true, email: true } });
+      if (user) {
+        const { triggerNotification } = await import("@/lib/novu");
+        await triggerNotification("kyc-update", id, {
+          userName: user.name,
+          action: action === "APPROVE" ? "approved" : "rejected",
+          notes: notes || "No additional notes provided.",
+          documentType: kycDoc.documentType,
+        });
+      }
+    } catch (notificationError) {
+      console.error("Failed to trigger Novu notification:", notificationError);
+    }
+
     return NextResponse.json({ kycDoc, message: `Document ${action === "APPROVE" ? "approved" : "rejected"} successfully` });
   } catch (err) {
     console.error("Verify POST error:", err);

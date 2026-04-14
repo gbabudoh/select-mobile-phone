@@ -79,7 +79,4 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // Required for Next.js 15+ App Router — trusts the Host header so
-  // internal session fetches from client components are not rejected.
-  trustHost: true,
 };

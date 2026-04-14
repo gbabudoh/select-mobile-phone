@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { UserRole, VerificationStatus } from "@/app/generated/prisma/client";
+import { UserRole, VerificationStatus } from "@generated/prisma/client";
 
 /**
  * Checks if a user is verified based on their role.

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@/app/generated/prisma/enums";
+import { UserRole } from "@generated/prisma/client";
 import { requireSuperAdmin } from "@/lib/super-admin-guard";
 import bcrypt from "bcryptjs";
 
