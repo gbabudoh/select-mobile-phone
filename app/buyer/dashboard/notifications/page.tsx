@@ -11,12 +11,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export default function NotificationsPage() {
-  const notifications = [
-    { id: "1", type: "order_update", title: "Order Shipped", body: "Your iPhone 18 Pro is on its way. Tracking: 1Z999AA10123456784", time: "2 hours ago", isRead: false },
-    { id: "2", type: "preorder_ready", title: "Preorder Queue Updated", body: "You moved to position #12 in the iPhone 18 Pro Max queue.", time: "5 hours ago", isRead: false },
-    { id: "3", type: "trade_in_approved", title: "Trade-In Value Locked", body: "Your iPhone 16 Pro trade-in value of $350 is locked until Sep 15, 2026.", time: "1 day ago", isRead: true },
-    { id: "4", type: "esim_activated", title: "eSIM Activated", body: "Your Cross-Border plan eSIM is now active. Enjoy seamless US-Canada coverage.", time: "3 days ago", isRead: true },
-  ];
+  const notifications: Array<{ id: string; type: string; title: string; body: string; time: string; isRead: boolean }> = [];
 
   return (
     <div>

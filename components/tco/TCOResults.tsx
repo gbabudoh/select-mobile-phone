@@ -1,7 +1,8 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, PieChart, ShieldCheck } from "lucide-react";
+import { TrendingUp, PieChart, ShieldCheck, ShoppingCart, Zap } from "lucide-react";
+import Link from "next/link";
 import type { TCOResult } from "../../lib/tco";
 
 interface Props {
@@ -10,8 +11,15 @@ interface Props {
 }
 
 export function TCOResults({ result, months }: Props) {
-  const { carrierTotal, byopTotal, saved, carrierBreakdown, byopBreakdown } = result;
+  const { carrierTotal, byopTotal, saved, monthlySavings, carrierBreakdown, byopBreakdown } = result;
   const barRatio = carrierTotal > 0 ? (byopTotal / carrierTotal) * 100 : 0;
+
+  const carrierMonthly = months > 0 ? carrierTotal / months : 0;
+  const byopMonthly = months > 0 ? byopTotal / months : 0;
+  const annualSavings = monthlySavings * 12;
+
+  // Key forces Framer Motion to remount bars whenever totals change → re-runs initial→animate
+  const animKey = `${carrierTotal.toFixed(0)}-${byopTotal.toFixed(0)}`;
 
   return (
     <div className="glass-panel p-8 md:p-10 rounded-[3rem] sticky top-32 overflow-hidden bg-white/40 border-white shadow-xl">
@@ -27,20 +35,25 @@ export function TCOResults({ result, months }: Props) {
         </h3>
       </div>
 
-      {/* Bars */}
-      <div className="space-y-8">
+      {/* Bars — key triggers re-animation on data change */}
+      <div key={animKey} className="space-y-6">
         {/* Carrier */}
         <div className="space-y-3">
           <div className="flex justify-between items-end">
             <div>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Carrier Contract</span>
-              <span className="text-lg font-black text-[#0f172a]">Standard Pricing</span>
+              <span className="text-base font-black text-[#0f172a]">Standard Pricing</span>
             </div>
-            <span className="text-xl font-black text-rose-500">
-              ${carrierTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </span>
+            <div className="text-right">
+              <span className="text-xl font-black text-rose-500">
+                ${carrierTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
+              <span className="block text-[10px] font-bold text-rose-400/70">
+                ≈ ${carrierMonthly.toFixed(0)}/mo
+              </span>
+            </div>
           </div>
-          <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
+          <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
             <motion.div
               className="h-full bg-gradient-to-r from-rose-400 to-rose-600 shadow-lg shadow-rose-500/20"
               initial={{ width: 0 }}
@@ -50,18 +63,30 @@ export function TCOResults({ result, months }: Props) {
           </div>
         </div>
 
-        {/* BYOP */}
+        {/* VS divider */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-gray-100" />
+          <span className="text-[9px] font-black text-gray-300 uppercase tracking-[0.3em] px-1">vs</span>
+          <div className="flex-1 h-px bg-gray-100" />
+        </div>
+
+        {/* Unlocked + eSIM */}
         <div className="space-y-3">
           <div className="flex justify-between items-end">
             <div>
-              <span className="text-[10px] font-black text-[#04a1c6] uppercase tracking-widest block mb-1">Unlocked + BYOP eSIM</span>
-              <span className="text-lg font-black text-[#0f172a]">Optimized Cost</span>
+              <span className="text-[10px] font-black text-[#04a1c6] uppercase tracking-widest block mb-1">Unlocked + Select eSIM</span>
+              <span className="text-base font-black text-[#0f172a]">Optimized Cost</span>
             </div>
-            <span className="text-xl font-black text-emerald-500">
-              ${byopTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </span>
+            <div className="text-right">
+              <span className="text-xl font-black text-emerald-500">
+                ${byopTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
+              <span className="block text-[10px] font-bold text-emerald-400/70">
+                ≈ ${byopMonthly.toFixed(0)}/mo
+              </span>
+            </div>
           </div>
-          <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
+          <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
             <motion.div
               className="h-full bg-gradient-to-r from-[#04a1c6] to-[#04a1c6]/80 shadow-lg shadow-[#04a1c6]/20"
               initial={{ width: 0 }}
@@ -72,12 +97,13 @@ export function TCOResults({ result, months }: Props) {
         </div>
       </div>
 
-      {/* Savings badge */}
+      {/* Savings badge — key triggers re-animation on data change */}
       <motion.div
+        key={`savings-${animKey}`}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.5, type: "spring" }}
-        className={`mt-10 p-8 rounded-[2rem] text-center relative overflow-hidden transition-all duration-500 border ${
+        className={`mt-8 p-8 rounded-4xl text-center relative overflow-hidden transition-all duration-500 border ${
           saved >= 0
             ? "bg-emerald-50 border-emerald-100"
             : "bg-rose-50 border-rose-100"
@@ -93,69 +119,108 @@ export function TCOResults({ result, months }: Props) {
               ${Math.abs(saved).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
           </div>
-          <p className={`text-xs font-bold ${saved >= 0 ? "text-emerald-600/60" : "text-rose-600/60"}`}>
+          <p className={`text-xs font-bold mb-5 ${saved >= 0 ? "text-emerald-600/60" : "text-rose-600/60"}`}>
             {saved >= 0 ? "Cheaper than carrier contract" : "More expensive than carrier"}
           </p>
+
+          {/* Per-month & annual breakdown pills */}
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <div className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${saved >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+              ${Math.abs(monthlySavings).toFixed(0)}<span className="font-bold opacity-60"> / mo</span>
+            </div>
+            <div className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${saved >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+              ${Math.abs(annualSavings).toLocaleString(undefined, { maximumFractionDigits: 0 })}<span className="font-bold opacity-60"> / yr</span>
+            </div>
+          </div>
         </div>
-        
+
         {/* Animated background element */}
-        <motion.div 
-           animate={{ 
-             scale: [1, 1.2, 1],
-             opacity: [0.1, 0.2, 0.1]
-           }}
-           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-           className={`absolute inset-0 m-auto w-32 h-32 blur-3xl rounded-full ${saved >= 0 ? "bg-emerald-400" : "bg-rose-400"}`}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.2, 0.1]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className={`absolute inset-0 m-auto w-32 h-32 blur-3xl rounded-full ${saved >= 0 ? "bg-emerald-400" : "bg-rose-400"}`}
         />
       </motion.div>
 
       {/* Breakdown */}
       <div className="mt-10 pt-10 border-t border-gray-100">
         <div className="flex items-center gap-2 mb-6">
-           <PieChart className="w-4 h-4 text-[#0f172a]/40" />
-           <span className="text-[10px] font-black text-[#0f172a]/40 uppercase tracking-widest">Cost Breakdown</span>
+          <PieChart className="w-4 h-4 text-[#0f172a]/40" />
+          <span className="text-[10px] font-black text-[#0f172a]/40 uppercase tracking-widest">Cost Breakdown</span>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-8">
           <div className="space-y-4">
-            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Carrier Details</p>
+            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Carrier</p>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                 <span className="text-gray-400 font-bold uppercase tracking-tighter">Device</span>
-                 <span className="font-black text-[#0f172a]">${carrierBreakdown.device.toFixed(0)}</span>
+                <span className="text-gray-400 font-bold uppercase tracking-tighter">Device</span>
+                <span className="font-black text-[#0f172a]">${carrierBreakdown.device.toFixed(0)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                 <span className="text-gray-400 font-bold uppercase tracking-tighter">Plan</span>
-                 <span className="font-black text-[#0f172a]">${carrierBreakdown.plan.toFixed(0)}</span>
+                <span className="text-gray-400 font-bold uppercase tracking-tighter">Plan</span>
+                <span className="font-black text-[#0f172a]">${carrierBreakdown.plan.toFixed(0)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                 <span className="text-gray-400 font-bold uppercase tracking-tighter">Activation</span>
-                 <span className="font-black text-[#0f172a]">${carrierBreakdown.activation.toFixed(0)}</span>
+                <span className="text-gray-400 font-bold uppercase tracking-tighter">Activation</span>
+                <span className="font-black text-[#0f172a]">${carrierBreakdown.activation.toFixed(0)}</span>
               </div>
-               {carrierBreakdown.insurance > 0 && (
+              {carrierBreakdown.insurance > 0 && (
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-400 font-bold uppercase tracking-tighter">Insurance</span>
                   <span className="font-black text-[#0f172a]">${carrierBreakdown.insurance.toFixed(0)}</span>
                 </div>
               )}
+              <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-100">
+                <span className="text-gray-500 font-black uppercase tracking-tighter">Total</span>
+                <span className="font-black text-rose-500">${carrierTotal.toFixed(0)}</span>
+              </div>
             </div>
           </div>
-          
+
           <div className="space-y-4">
-            <p className="text-[10px] font-black text-[#04a1c6] uppercase tracking-widest">BYOP Details</p>
-             <div className="space-y-2">
+            <p className="text-[10px] font-black text-[#04a1c6] uppercase tracking-widest">Unlocked + eSIM</p>
+            <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                 <span className="text-gray-400 font-bold uppercase tracking-tighter">Device</span>
-                 <span className="font-black text-[#0f172a]">${byopBreakdown.device.toFixed(0)}</span>
+                <span className="text-gray-400 font-bold uppercase tracking-tighter">Device</span>
+                <span className="font-black text-[#0f172a]">${byopBreakdown.device.toFixed(0)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                 <span className="text-gray-400 font-bold uppercase tracking-tighter">Plan</span>
-                 <span className="font-black text-[#0f172a]">${byopBreakdown.plan.toFixed(0)}</span>
+                <span className="text-gray-400 font-bold uppercase tracking-tighter">Plan</span>
+                <span className="font-black text-[#0f172a]">${byopBreakdown.plan.toFixed(0)}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-100">
+                <span className="text-gray-500 font-black uppercase tracking-tighter">Total</span>
+                <span className="font-black text-emerald-500">${byopTotal.toFixed(0)}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* CTA */}
+      {saved > 0 && (
+        <div className="mt-10 pt-8 border-t border-gray-100 space-y-3">
+          <p className="text-[10px] font-black text-[#0f172a]/40 uppercase tracking-widest mb-4">Ready to save?</p>
+          <Link
+            href="/normal-order"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#0f172a] text-white text-xs font-black tracking-wide hover:bg-[#04a1c6] transition-colors"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            Shop Unlocked Phones
+          </Link>
+          <Link
+            href="/preorder"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-[#04a1c6]/30 text-[#04a1c6] text-xs font-black tracking-wide hover:bg-[#04a1c6] hover:text-white transition-colors"
+          >
+            <Zap className="w-3.5 h-3.5" />
+            Preorder &amp; Save More
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

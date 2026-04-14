@@ -3,8 +3,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  ShieldCheck, Star, Eye, Package, Zap, Truck, ShoppingCart 
+import {
+  ShieldCheck, Star, Eye, Package, Zap, Truck, ShoppingCart
 } from "lucide-react";
 import { Product } from "../lib/products";
 import { useCart } from "../context/CartContext";
@@ -12,9 +12,10 @@ import { useCart } from "../context/CartContext";
 interface ProductCardProps {
   product: Product;
   onQuickView?: () => void;
+  onTagClick?: (tag: string) => void;
 }
 
-export function ProductCard({ product, onQuickView }: ProductCardProps) {
+export function ProductCard({ product, onQuickView, onTagClick }: ProductCardProps) {
   const { addToCart } = useCart();
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -30,7 +31,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
       className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-[#04a1c6]/5 transition-all duration-300 group relative flex flex-col"
     >
       {/* Image */}
-      <Link href={`/product/${product.id}`} className="block relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden cursor-pointer">
+      <Link href={`/product/${product.id}`} className="block relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
         <Image
           src={product.image}
           alt={product.name}
@@ -42,8 +43,8 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         {/* Badges overlay */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {product.isSelectVerified && (
-            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#04a1c6] text-white text-[10px] font-bold uppercase tracking-wider shadow-lg cursor-pointer">
-              <ShieldCheck className="w-3 h-3 cursor-pointer" /> Verified
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#04a1c6] text-white text-[10px] font-bold uppercase tracking-wider shadow-lg">
+              <ShieldCheck className="w-3 h-3" /> Verified
             </span>
           )}
           {discount > 0 && (
@@ -65,7 +66,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
             className="absolute bottom-3 right-3 p-2.5 rounded-xl bg-white/90 backdrop-blur-sm text-[#0f172a] opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-[#04a1c6] hover:text-white cursor-pointer shadow-lg z-10"
             aria-label={`Quick view ${product.name}`}
           >
-            <Eye className="w-4 h-4 cursor-pointer" />
+            <Eye className="w-4 h-4" />
           </button>
         )}
 
@@ -88,14 +89,27 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         </div>
 
         {/* Name */}
-        <Link href={`/product/${product.id}`} className="block group/title cursor-pointer">
+        <Link href={`/product/${product.id}`} className="block group/title">
           <h3 className="font-bold text-[#0f172a] text-sm leading-snug mb-2 line-clamp-2 min-h-[2.5rem] group-hover/title:text-[#04a1c6] transition-colors">
             {product.name}
           </h3>
         </Link>
 
-        {/* Tags */}
-        {product.tags && (
+        {/* Tags — clickable, wire to search filter */}
+        {product.tags && onTagClick && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {product.tags.slice(0, 3).map((tag) => (
+              <button
+                key={tag}
+                onClick={() => onTagClick(tag)}
+                className="px-2 py-0.5 rounded-md bg-gray-100 hover:bg-[#04a1c6]/10 hover:text-[#04a1c6] text-[10px] font-medium text-[#0f172a]/50 transition-colors cursor-pointer"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+        {product.tags && !onTagClick && (
           <div className="flex flex-wrap gap-1 mb-3">
             {product.tags.slice(0, 3).map((tag) => (
               <span key={tag} className="px-2 py-0.5 rounded-md bg-gray-100 text-[10px] font-medium text-[#0f172a]/50">
@@ -107,13 +121,21 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mb-3">
-          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 cursor-pointer" />
-          <span className="text-xs font-semibold text-[#0f172a] cursor-pointer">{product.rating}</span>
-          <span className="text-xs text-[#0f172a]/40 cursor-pointer">({product.reviews})</span>
+          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+          <span className="text-xs font-semibold text-[#0f172a]">{product.rating}</span>
+          <span className="text-xs text-[#0f172a]/40">({product.reviews})</span>
           {product.diagnosticScore && (
             <>
               <span className="text-[#0f172a]/20 mx-1">·</span>
-              <span className="text-[10px] font-semibold text-emerald-600">{product.diagnosticScore}/50 pts</span>
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-10 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full"
+                    style={{ width: `${(product.diagnosticScore / 50) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-semibold text-emerald-600">{product.diagnosticScore}/50</span>
+              </div>
             </>
           )}
         </div>
@@ -151,41 +173,42 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Price + CTA */}
-        <div className="flex items-end justify-between pt-3 border-t border-gray-50">
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold text-[#0f172a]">
-                ${product.price.toLocaleString()}
+        {/* Price */}
+        <div className="pt-3 border-t border-gray-50">
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-xl font-extrabold text-[#0f172a]">
+              ${product.price.toLocaleString()}
+            </span>
+            {product.originalPrice && (
+              <span className="text-sm text-[#0f172a]/30 line-through">
+                ${product.originalPrice.toLocaleString()}
               </span>
-              {product.originalPrice && (
-                <span className="text-sm text-[#0f172a]/30 line-through">
-                  ${product.originalPrice.toLocaleString()}
-                </span>
-              )}
-            </div>
-            {product.category === "ESIM_PLAN" && (
-              <span className="text-[10px] text-[#0f172a]/40 font-medium">/month</span>
             )}
-            <div className="flex items-center gap-1 mt-1">
-              {product.shipping === "Instant eSIM" ? (
-                <Zap className="w-3 h-3 text-[#04a1c6]" />
-              ) : (
-                <Truck className="w-3 h-3 text-emerald-500" />
-              )}
-              <span className="text-[10px] font-medium text-emerald-600">{product.shipping}</span>
-            </div>
           </div>
+          {product.category === "ESIM_PLAN" && (
+            <span className="text-[10px] text-[#0f172a]/40 font-medium">/month</span>
+          )}
+          <div className="flex items-center gap-1 mb-3">
+            {product.shipping === "Instant eSIM" ? (
+              <Zap className="w-3 h-3 text-[#04a1c6]" />
+            ) : (
+              <Truck className="w-3 h-3 text-emerald-500" />
+            )}
+            <span className="text-[10px] font-medium text-emerald-600">{product.shipping}</span>
+          </div>
+
+          {/* Add to Cart — full label */}
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               addToCart(product);
             }}
-            className="p-2.5 rounded-xl bg-[#0f172a] text-white hover:bg-[#04a1c6] transition-colors cursor-pointer shadow-md active:scale-90"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0f172a] text-white hover:bg-[#04a1c6] transition-colors cursor-pointer shadow-md active:scale-95 text-xs font-bold tracking-wide"
             aria-label={`Add ${product.name} to cart`}
           >
-            <ShoppingCart className="w-4 h-4 cursor-pointer" />
+            <ShoppingCart className="w-3.5 h-3.5" />
+            Add to Cart
           </button>
         </div>
       </div>

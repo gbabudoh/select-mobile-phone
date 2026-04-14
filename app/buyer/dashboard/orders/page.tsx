@@ -12,12 +12,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function OrdersPage() {
-  // Mock data — replace with API call
-  const orders = [
-    { id: "SM-4821", product: "iPhone 18 Pro 256GB", type: "NORMAL", status: "SHIPPED", total: "$1,299.00", date: "Feb 28, 2026" },
-    { id: "SM-4790", product: "Galaxy S26 Ultra + Cross-Border Plan", type: "NORMAL", status: "COMPLETED", total: "$1,489.00", date: "Feb 20, 2026" },
-    { id: "SM-4655", product: "AirPods Pro 3", type: "NORMAL", status: "DELIVERED", total: "$249.00", date: "Feb 10, 2026" },
-  ];
+  const orders: Array<{ id: string; product: string; type: string; status: string; total: string; date: string }> = [];
 
   return (
     <div>

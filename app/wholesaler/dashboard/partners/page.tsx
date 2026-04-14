@@ -30,88 +30,7 @@ interface Partner {
 }
 
 // --- Mock Data ---
-const MOCK_PARTNERS: Partner[] = [
-  {
-    id: "PTR-001",
-    name: "Sarah Jenkins",
-    company: "Mobile City Retail",
-    role: "Regional Distributor",
-    location: "Austin, TX",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face",
-    status: "Active",
-    tier: "Gold",
-    ordersCompleted: 842,
-    totalRevenue: "$1.2M",
-    rating: 4.9,
-    joinDate: "Jan 2024",
-    categories: ["iPhones", "Galaxy", "Accessories"],
-    lastActive: "2 hours ago"
-  },
-  {
-    id: "PTR-002",
-    name: "Marcus Chen",
-    company: "TechDistro Inc.",
-    role: "Enterprise Partner",
-    location: "San Francisco, CA",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
-    status: "Active",
-    tier: "Gold",
-    ordersCompleted: 1247,
-    totalRevenue: "$2.8M",
-    rating: 4.8,
-    joinDate: "Mar 2023",
-    categories: ["Bulk Smartphones", "Tablets", "Wearables"],
-    lastActive: "5 min ago"
-  },
-  {
-    id: "PTR-003",
-    name: "Ahmed Hassan",
-    company: "Global Comm Systems",
-    role: "International Distributor",
-    location: "New York, NY",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
-    status: "Pending",
-    tier: "Silver",
-    ordersCompleted: 156,
-    totalRevenue: "$340K",
-    rating: 4.5,
-    joinDate: "Sep 2025",
-    categories: ["Pixel", "OnePlus", "Refurbished"],
-    lastActive: "1 day ago"
-  },
-  {
-    id: "PTR-004",
-    name: "Diana Morales",
-    company: "CellPro Wholesale",
-    role: "Retail Chain Partner",
-    location: "Miami, FL",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face",
-    status: "Active",
-    tier: "Silver",
-    ordersCompleted: 623,
-    totalRevenue: "$890K",
-    rating: 4.7,
-    joinDate: "Jun 2024",
-    categories: ["Budget Phones", "Accessories", "Cases"],
-    lastActive: "3 hours ago"
-  },
-  {
-    id: "PTR-005",
-    name: "Kevin O'Brien",
-    company: "Wireless Network Hub",
-    role: "MVNO Partner",
-    location: "Chicago, IL",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
-    status: "Inactive",
-    tier: "Bronze",
-    ordersCompleted: 89,
-    totalRevenue: "$120K",
-    rating: 4.2,
-    joinDate: "Nov 2025",
-    categories: ["eSIM Devices", "5G Phones"],
-    lastActive: "2 weeks ago"
-  }
-];
+const MOCK_PARTNERS: Partner[] = [];
 
 const tierConfig = {
   Gold: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200", icon: "🏆" },
@@ -147,8 +66,8 @@ export default function WholesalerPartnersPage() {
   });
 
   const activeCount = MOCK_PARTNERS.filter(p => p.status === "Active").length;
-  const totalRevenue = "$5.35M";
-  const avgRating = (MOCK_PARTNERS.reduce((sum, p) => sum + p.rating, 0) / MOCK_PARTNERS.length).toFixed(1);
+  const totalRevenue = "$0.00";
+  const avgRating = MOCK_PARTNERS.length > 0 ? (MOCK_PARTNERS.reduce((sum, p) => sum + p.rating, 0) / MOCK_PARTNERS.length).toFixed(1) : "0.0";
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 antialiased font-sans pb-20 relative">

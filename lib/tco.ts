@@ -14,6 +14,7 @@ export interface TCOResult {
   carrierTotal: number;
   byopTotal: number;
   saved: number;
+  monthlySavings: number;
   carrierBreakdown: {
     device: number;
     plan: number;
@@ -50,10 +51,14 @@ export function calculateTCO(inputs: TCOInputs): TCOResult {
   const byopDevice = devicePrice;
   const byopTotal = byopDevice + byopPlan;
 
+  const saved = carrierTotal - byopTotal;
+  const monthlySavings = months > 0 ? saved / months : 0;
+
   return {
     carrierTotal,
     byopTotal,
-    saved: carrierTotal - byopTotal,
+    saved,
+    monthlySavings,
     carrierBreakdown: {
       device: carrierDevice,
       plan: carrierPlan,

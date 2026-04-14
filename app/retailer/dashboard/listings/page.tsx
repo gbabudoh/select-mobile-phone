@@ -7,7 +7,7 @@ import {
   Eye, Copy
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PRODUCTS, Product } from "@/lib/products";
+import { Product } from "@/lib/products";
 import Image from "next/image";
 
 export default function RetailerInventoryPage() {
@@ -49,9 +49,7 @@ export default function RetailerInventoryPage() {
   const [toasts, setToasts] = useState<{ id: number; message: string; type: "success" | "error" }[]>([]);
 
   // Convert to local state to allow mutations (like Delete)
-  const [localProducts, setLocalProducts] = useState<Product[]>(() => 
-    PRODUCTS.filter(p => p.sellerType === "Retailer")
-  );
+  const [localProducts, setLocalProducts] = useState<Product[]>([]);
 
   const addToast = (message: string, type: "success" | "error" = "success") => {
     const id = getNextId();

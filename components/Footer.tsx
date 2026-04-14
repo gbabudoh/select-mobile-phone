@@ -22,9 +22,9 @@ const NAV_COLS = [
   {
     heading: "Marketplace",
     links: [
-      { label: "Normal Order", href: "/normal-order" },
-      { label: "Preorder Engine", href: "/preorder" },
-      { label: "TCO Calculator", href: "/tco-calculator" },
+      { label: "Shop Phones", href: "/normal-order" },
+      { label: "Preorder", href: "/preorder" },
+      { label: "Compare & Save", href: "/tco-calculator" },
       { label: "Trade-In", href: "/trade-in" },
     ],
   },
@@ -136,8 +136,8 @@ export function Footer() {
                 />
               </Link>
               <p className="text-sm leading-relaxed text-[#0f172a]/50 max-w-xs">
-                The intelligent mobile marketplace. Compare, preorder, and
-                experience intentional indulgence across the US and Canada.
+                Buy, sell, and preorder mobile devices with verified escrow,
+                real cost transparency, and instant eSIM activation — across the US and Canada.
               </p>
 
               {/* Social row */}

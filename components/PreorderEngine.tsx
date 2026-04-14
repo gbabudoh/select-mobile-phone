@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Rocket, Clock, ShieldCheck, ArrowLeftRight, Users,
   ChevronRight, X, Zap, Lock, Bell, BarChart3, Truck,
-  Search, SlidersHorizontal, BadgeCheck, Package
+  Search, SlidersHorizontal, BadgeCheck, Package,
+  Building2, Store, Radio, LayoutGrid
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,7 @@ interface Seller {
 interface NetworkPartner {
   name: string;
   type: "MNO" | "MVNO" | "Flanker";
-  logo: string; // emoji placeholder
+  logo: string;
   planName: string;
   monthlyPrice: number;
   data: string;
@@ -188,7 +189,7 @@ const CAMPAIGNS: PreorderCampaign[] = [
   },
 ];
 
-// ─── Filter Constants ───────────────────────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const SELLER_TYPES: SellerType[] = ["Wholesaler", "Retailer", "Network Provider"];
 const BRANDS = ["Apple", "Samsung", "Google"];
@@ -196,10 +197,52 @@ const REGIONS = ["US", "CA"];
 const ALL_NETWORK_NAMES = [...new Set(NETWORK_PARTNERS.map((n) => n.name))];
 
 const SELLER_META: Record<SellerType, { emoji: string; color: string; bgColor: string; borderColor: string; desc: string }> = {
-  "Wholesaler": { emoji: "🏭", color: "text-indigo-700", bgColor: "bg-indigo-50", borderColor: "border-indigo-200", desc: "Bulk inventory, B2B pricing, demand forecasting" },
-  "Retailer": { emoji: "🏪", color: "text-emerald-700", bgColor: "bg-emerald-50", borderColor: "border-emerald-200", desc: "Verified store, 2-day shipping, return policy" },
-  "Network Provider": { emoji: "📡", color: "text-cyan-700", bgColor: "bg-cyan-50", borderColor: "border-cyan-200", desc: "eSIM bundles, instant activation, no contract" },
+  "Wholesaler":       { emoji: "🏭", color: "text-indigo-700", bgColor: "bg-indigo-50",  borderColor: "border-indigo-200",  desc: "Bulk inventory, B2B pricing, demand forecasting" },
+  "Retailer":         { emoji: "🏪", color: "text-emerald-700", bgColor: "bg-emerald-50", borderColor: "border-emerald-200", desc: "Verified store, 2-day shipping, return policy" },
+  "Network Provider": { emoji: "📡", color: "text-cyan-700",    bgColor: "bg-cyan-50",    borderColor: "border-cyan-200",    desc: "eSIM bundles, instant activation, no contract" },
 };
+
+const SELLER_CARD_BADGE: Record<SellerType, { label: string; className: string }> = {
+  "Wholesaler":       { label: "🏭 B2B Pricing",    className: "bg-indigo-100 text-indigo-700" },
+  "Retailer":         { label: "🏪 Retail",          className: "bg-emerald-100 text-emerald-700" },
+  "Network Provider": { label: "⚡ Bundle Deal",     className: "bg-cyan-100 text-cyan-700" },
+};
+
+// ─── Shared tab button helper ─────────────────────────────────────────────────
+
+function TabBtn({
+  active, onClick, children,
+}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
+        active
+          ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-md shadow-[#04a1c6]/20"
+          : "bg-gray-50 text-[#0f172a]/60 border-gray-200 hover:border-[#04a1c6]/40 hover:text-[#04a1c6]"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function FilterChipBtn({
+  active, onClick, children,
+}: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+        active
+          ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-sm"
+          : "bg-gray-50 border-gray-200 text-[#0f172a]/50 hover:border-[#04a1c6]/30 hover:text-[#04a1c6]"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
@@ -210,7 +253,6 @@ export function PreorderEngine() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  // Filters
   const [search, setSearch] = useState("");
   const [sellerFilter, setSellerFilter] = useState<SellerType | "All">("All");
   const [brandFilter, setBrandFilter] = useState("All");
@@ -240,13 +282,17 @@ export function PreorderEngine() {
   const activeFilterCount = [sellerFilter, brandFilter, regionFilter, networkFilter].filter((f) => f !== "All").length;
 
   const clearFilters = () => {
-    setSellerFilter("All"); setBrandFilter("All"); setRegionFilter("All"); setNetworkFilter("All"); setSearch("");
+    setSellerFilter("All"); setBrandFilter("All"); setRegionFilter("All");
+    setNetworkFilter("All"); setSearch("");
   };
+
+  const totalSlotsLeft = CAMPAIGNS.reduce((acc, c) => acc + (c.maxSlots - c.slotsFilled), 0);
 
   return (
     <section className="py-20 px-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -254,18 +300,23 @@ export function PreorderEngine() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-sm font-semibold mb-4">
             <Rocket className="w-4 h-4" /> Deposit-Based Queue — Lock Your Spot
           </div>
           <h2 className="text-4xl md:text-6xl font-extrabold text-[#0f172a] tracking-tight mb-4">
-            Preorder Engine
+            Reserve Your Device
           </h2>
-          <p className="text-lg text-[#0f172a]/60 max-w-3xl mx-auto">
+          <p className="text-lg text-[#0f172a]/60 max-w-3xl mx-auto mb-6">
             Reserve upcoming flagships before launch. Know exactly who you&apos;re buying from — wholesaler, retailer, or network provider — and which carriers you can bundle with.
           </p>
+          {/* Urgency signal */}
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-sm font-bold">
+            <Users className="w-4 h-4" />
+            {totalSlotsLeft.toLocaleString()} spots remaining across {CAMPAIGNS.length} live campaigns
+          </div>
         </motion.div>
 
-        {/* How It Works */}
+        {/* ── How It Works ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -279,10 +330,10 @@ export function PreorderEngine() {
             { step: "03", icon: <ArrowLeftRight className="w-5 h-5" />, title: "Lock Trade-In", desc: "Lock your current phone's value months before launch as a guaranteed down payment." },
             { step: "04", icon: <Truck className="w-5 h-5" />, title: "Launch Day Ship", desc: "Your device ships on release day. Escrow-protected. eSIM activates instantly." },
           ].map((item) => (
-            <div key={item.step} className="relative bg-white rounded-2xl border border-gray-100 p-6 shadow-sm group hover:shadow-lg hover:border-purple-200 transition-all">
-              <span className="text-5xl font-black text-purple-100 absolute top-4 right-4 group-hover:text-purple-200 transition-colors">{item.step}</span>
+            <div key={item.step} className="relative bg-white rounded-2xl border border-gray-100 p-6 shadow-sm group hover:shadow-lg hover:border-[#04a1c6]/30 transition-all">
+              <span className="text-5xl font-black text-[#04a1c6]/10 absolute top-4 right-4 group-hover:text-[#04a1c6]/20 transition-colors">{item.step}</span>
               <div className="relative z-10">
-                <div className="p-3 rounded-xl bg-purple-100 text-purple-600 w-fit mb-4">{item.icon}</div>
+                <div className="p-3 rounded-xl bg-[#04a1c6]/10 text-[#04a1c6] w-fit mb-4">{item.icon}</div>
                 <h3 className="font-bold text-[#0f172a] mb-1">{item.title}</h3>
                 <p className="text-sm text-[#0f172a]/50">{item.desc}</p>
               </div>
@@ -290,82 +341,36 @@ export function PreorderEngine() {
           ))}
         </motion.div>
 
-        {/* ── Seller Type Filter Tabs ── */}
-        <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/30 text-center mb-3">Who are you buying from?</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              onClick={() => setSellerFilter("All")}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
-                sellerFilter === "All"
-                  ? "bg-[#0f172a] text-white border-[#0f172a] shadow-lg"
-                  : "bg-white text-[#0f172a]/60 border-gray-200 hover:border-purple-200"
-              }`}
-            >
-              <Package className="w-4 h-4" /> All Sellers
-              <span className={`text-xs px-1.5 py-0.5 rounded-md ${sellerFilter === "All" ? "bg-white/20" : "bg-gray-100"}`}>
+        {/* ── Browse Filter Panel ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#0f172a]/30 mb-3">Who are you buying from?</p>
+          <div className="flex flex-wrap gap-2">
+            <TabBtn active={sellerFilter === "All"} onClick={() => setSellerFilter("All")}>
+              <LayoutGrid className="w-4 h-4" /> All Sellers
+              <span className={`text-xs px-1.5 py-0.5 rounded-md font-bold ${sellerFilter === "All" ? "bg-white/20" : "bg-gray-200 text-[#0f172a]/40"}`}>
                 {CAMPAIGNS.length}
               </span>
-            </button>
+            </TabBtn>
             {SELLER_TYPES.map((st) => {
               const count = CAMPAIGNS.filter((c) => c.seller.type === st).length;
               const meta = SELLER_META[st];
               return (
-                <button
-                  key={st}
-                  onClick={() => setSellerFilter(st)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
-                    sellerFilter === st
-                      ? `${meta.bgColor} ${meta.color} ${meta.borderColor} shadow-md`
-                      : "bg-white text-[#0f172a]/60 border-gray-200 hover:border-purple-200"
-                  }`}
-                >
+                <TabBtn key={st} active={sellerFilter === st} onClick={() => setSellerFilter(st)}>
                   <span>{meta.emoji}</span> {st}
-                  <span className={`text-xs px-1.5 py-0.5 rounded-md ${sellerFilter === st ? "bg-white/50" : "bg-gray-100"}`}>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-md font-bold ${sellerFilter === st ? "bg-white/20" : "bg-gray-200 text-[#0f172a]/40"}`}>
                     {count}
                   </span>
-                </button>
+                </TabBtn>
               );
             })}
           </div>
-        </div>
-
-        {/* ── Network Provider Filter ── */}
-        <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/30 text-center mb-3">Filter by Network Provider</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              onClick={() => setNetworkFilter("All")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                networkFilter === "All"
-                  ? "bg-cyan-600 text-white border-cyan-600 shadow-md"
-                  : "bg-white text-[#0f172a]/50 border-gray-200 hover:border-cyan-200"
-              }`}
-            >
-              All Networks
-            </button>
-            {ALL_NETWORK_NAMES.map((name) => {
-              const partner = NETWORK_PARTNERS.find((n) => n.name === name)!;
-              const count = CAMPAIGNS.filter((c) => c.networkPartners.some((n) => n.name === name)).length;
-              return (
-                <button
-                  key={name}
-                  onClick={() => setNetworkFilter(name)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                    networkFilter === name
-                      ? "bg-cyan-600 text-white border-cyan-600 shadow-md"
-                      : "bg-white text-[#0f172a]/50 border-gray-200 hover:border-cyan-200"
-                  }`}
-                >
-                  <span>{partner.logo}</span> {name}
-                  <span className={`text-[10px] px-1 py-0.5 rounded ${networkFilter === name ? "bg-white/20" : "bg-gray-100"}`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        </motion.div>
 
         {/* ── Search + More Filters ── */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -376,7 +381,7 @@ export function PreorderEngine() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search devices, sellers, networks..."
-              className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-purple-200 shadow-sm"
+              className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#04a1c6]/30 focus:border-[#04a1c6]/30 shadow-sm"
             />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full cursor-pointer">
@@ -388,45 +393,71 @@ export function PreorderEngine() {
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-5 py-3.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
               showFilters || activeFilterCount > 0
-                ? "bg-purple-600 text-white border-purple-600"
-                : "bg-white text-[#0f172a]/60 border-gray-200"
+                ? "bg-[#04a1c6] text-white border-[#04a1c6]"
+                : "bg-white text-[#0f172a]/60 border-gray-200 hover:border-[#04a1c6]/30"
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" /> More Filters
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-white/20 text-xs flex items-center justify-center">{activeFilterCount}</span>
+              <span className="w-5 h-5 rounded-full bg-white/20 text-xs flex items-center justify-center font-bold">{activeFilterCount}</span>
             )}
           </button>
         </div>
 
-        {/* Expandable Filters */}
+        {/* ── Expandable Filters Panel ── */}
         <AnimatePresence>
           {showFilters && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden mb-6"
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden mb-4"
             >
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-6">
+                {/* Brand */}
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/40 mb-2 block">Brand</label>
                   <div className="flex flex-wrap gap-1.5">
                     {["All", ...BRANDS].map((b) => (
-                      <button key={b} onClick={() => setBrandFilter(b)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${brandFilter === b ? "bg-[#0f172a] text-white" : "bg-gray-100 text-[#0f172a]/50 hover:bg-gray-200"}`}
-                      >{b}</button>
+                      <FilterChipBtn key={b} active={brandFilter === b} onClick={() => setBrandFilter(b)}>
+                        {b}
+                      </FilterChipBtn>
                     ))}
                   </div>
                 </div>
+
+                <div className="h-px bg-gray-100" />
+
+                {/* Region */}
                 <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/40 mb-2 block">Region</label>
                   <div className="flex flex-wrap gap-1.5">
                     {["All", ...REGIONS].map((r) => (
-                      <button key={r} onClick={() => setRegionFilter(r)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${regionFilter === r ? "bg-[#0f172a] text-white" : "bg-gray-100 text-[#0f172a]/50 hover:bg-gray-200"}`}
-                      >{r === "All" ? "All Regions" : r === "US" ? "🇺🇸 US" : "🇨🇦 Canada"}</button>
+                      <FilterChipBtn key={r} active={regionFilter === r} onClick={() => setRegionFilter(r)}>
+                        {r === "All" ? "All Regions" : r === "US" ? "🇺🇸 US" : "🇨🇦 Canada"}
+                      </FilterChipBtn>
                     ))}
+                  </div>
+                </div>
+
+                <div className="h-px bg-gray-100" />
+
+                {/* Network Provider */}
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/40 mb-2 block">Network Provider</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    <FilterChipBtn active={networkFilter === "All"} onClick={() => setNetworkFilter("All")}>
+                      All Networks
+                    </FilterChipBtn>
+                    {ALL_NETWORK_NAMES.map((name) => {
+                      const partner = NETWORK_PARTNERS.find((n) => n.name === name)!;
+                      return (
+                        <FilterChipBtn key={name} active={networkFilter === name} onClick={() => setNetworkFilter(name)}>
+                          {partner.logo} {name}
+                        </FilterChipBtn>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -434,19 +465,19 @@ export function PreorderEngine() {
           )}
         </AnimatePresence>
 
-        {/* Results count + clear */}
+        {/* Results bar */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-[#0f172a]/50">
             Showing <span className="font-semibold text-[#0f172a]">{filtered.length}</span> preorder campaigns
           </p>
-          {activeFilterCount > 0 && (
-            <button onClick={clearFilters} className="text-sm text-purple-600 font-medium hover:underline cursor-pointer">
+          {(activeFilterCount > 0 || search) && (
+            <button onClick={clearFilters} className="text-sm text-[#04a1c6] font-medium hover:underline cursor-pointer">
               Clear all filters
             </button>
           )}
         </div>
 
-        {/* Campaign Cards */}
+        {/* ── Campaign Cards ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16">
           <AnimatePresence mode="popLayout">
             {filtered.map((campaign, i) => (
@@ -460,12 +491,23 @@ export function PreorderEngine() {
           </AnimatePresence>
         </div>
 
+        {/* Empty State */}
         {filtered.length === 0 && (
-          <div className="text-center py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20"
+          >
             <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-[#0f172a] mb-2">No preorder campaigns found</h3>
-            <p className="text-sm text-[#0f172a]/50">Try adjusting your filters or search terms.</p>
-          </div>
+            <p className="text-sm text-[#0f172a]/50 mb-6">Try adjusting your filters or search terms.</p>
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#04a1c6] text-white text-sm font-bold cursor-pointer hover:bg-[#0390b0] transition-colors shadow-md"
+            >
+              <X className="w-4 h-4" /> Clear all filters
+            </button>
+          </motion.div>
         )}
 
         {/* Campaign Detail Modal */}
@@ -497,8 +539,9 @@ function CampaignCard({
 }) {
   const pct = Math.round((campaign.slotsFilled / campaign.maxSlots) * 100);
   const slotsLeft = campaign.maxSlots - campaign.slotsFilled;
-  const isAlmostFull = pct >= 90;
+  const isAlmostFull = pct >= 80;
   const meta = SELLER_META[campaign.seller.type];
+  const cardBadge = SELLER_CARD_BADGE[campaign.seller.type];
 
   return (
     <motion.div
@@ -507,21 +550,28 @@ function CampaignCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all group cursor-pointer"
+      className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:border-[#04a1c6]/20 transition-all group cursor-pointer"
       onClick={onSelect}
     >
       <div className="flex flex-col sm:flex-row">
         {/* Image */}
         <div className="sm:w-2/5 relative aspect-square sm:aspect-auto bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden min-h-[200px]">
           <Image src={campaign.image} alt={campaign.product} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+
+          {/* Meaningful badge — urgency or seller type */}
           <div className="absolute top-4 left-4 flex flex-col gap-1.5">
-            <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg ${
-              campaign.tier === "flagship" ? "bg-purple-600 text-white" :
-              campaign.tier === "limited" ? "bg-rose-500 text-white" : "bg-[#04a1c6] text-white"
-            }`}>
-              {campaign.tier === "limited" ? "🔥 Almost Gone" : "⭐ Flagship"}
-            </span>
+            {isAlmostFull ? (
+              <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg bg-rose-500 text-white">
+                🔥 {slotsLeft} spots left
+              </span>
+            ) : (
+              <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg ${cardBadge.className}`}>
+                {cardBadge.label}
+              </span>
+            )}
           </div>
+
+          {/* Country */}
           <div className="absolute top-4 right-4">
             <span className="px-2 py-1 rounded-md bg-white/90 backdrop-blur-sm text-[10px] font-bold text-[#0f172a]/70 shadow-sm">
               {campaign.country === "US/CA" ? "🇺🇸🇨🇦" : campaign.country === "US" ? "🇺🇸" : "🇨🇦"}
@@ -531,11 +581,11 @@ function CampaignCard({
 
         {/* Content */}
         <div className="sm:w-3/5 p-5 flex flex-col">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-500 mb-1">{campaign.brand}</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#04a1c6] mb-1">{campaign.brand}</span>
           <h3 className="text-xl font-extrabold text-[#0f172a] tracking-tight mb-1">{campaign.product}</h3>
           <p className="text-xs text-[#0f172a]/50 mb-3 line-clamp-2">{campaign.subtitle}</p>
 
-          {/* ── Seller Identity (prominent) ── */}
+          {/* Seller Identity */}
           <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl ${meta.bgColor} border ${meta.borderColor} mb-3`}>
             <span className="text-lg">{meta.emoji}</span>
             <div className="flex-1 min-w-0">
@@ -547,12 +597,12 @@ function CampaignCard({
             </div>
           </div>
 
-          {/* ── Network Partners (visible on card) ── */}
+          {/* Network Partners */}
           <div className="mb-3">
             <span className="text-[9px] font-bold text-[#0f172a]/30 uppercase tracking-wider block mb-1.5">Available Networks</span>
             <div className="flex flex-wrap gap-1">
               {campaign.networkPartners.map((np) => (
-                <span key={np.name} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-50 border border-cyan-100 text-[10px] font-semibold text-cyan-700">
+                <span key={np.name} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#04a1c6]/5 border border-[#04a1c6]/15 text-[10px] font-semibold text-[#04a1c6]">
                   {np.logo} {np.name}
                 </span>
               ))}
@@ -565,7 +615,7 @@ function CampaignCard({
               <span className="text-[#0f172a]/50 flex items-center gap-1">
                 <Users className="w-3 h-3" /> {campaign.slotsFilled.toLocaleString()} reserved
               </span>
-              <span className={`font-bold ${isAlmostFull ? "text-rose-500" : "text-purple-600"}`}>
+              <span className={`font-bold ${isAlmostFull ? "text-rose-500" : "text-[#04a1c6]"}`}>
                 {slotsLeft.toLocaleString()} left
               </span>
             </div>
@@ -575,7 +625,7 @@ function CampaignCard({
                 whileInView={{ width: `${pct}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className={`h-full rounded-full ${isAlmostFull ? "bg-gradient-to-r from-rose-400 to-rose-500" : "bg-gradient-to-r from-purple-400 to-purple-600"}`}
+                className={`h-full rounded-full ${isAlmostFull ? "bg-gradient-to-r from-rose-400 to-rose-500" : "bg-gradient-to-r from-[#04a1c6] to-[#0390b0]"}`}
               />
             </div>
           </div>
@@ -588,12 +638,13 @@ function CampaignCard({
                 <span className="text-xs text-[#0f172a]/30">deposit</span>
               </div>
               <div className="flex items-center gap-1 mt-0.5">
-                <Clock className="w-3 h-3 text-purple-500" />
-                <span className="text-[10px] font-semibold text-purple-600">{campaign.releaseDate}</span>
+                <Clock className="w-3 h-3 text-[#04a1c6]" />
+                <span className="text-[10px] font-semibold text-[#04a1c6]">{campaign.releaseDate}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-purple-600 font-bold text-xs group-hover:text-purple-700">
-              Details <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            {/* Visible CTA button */}
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#04a1c6]/10 text-[#04a1c6] font-bold text-xs group-hover:bg-[#04a1c6] group-hover:text-white transition-all">
+              Reserve <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </div>
         </div>
@@ -616,7 +667,8 @@ function CampaignModal({
   session: { user?: { id: string } } | null;
   router: AppRouterInstance;
 }) {
-  const [selectedNetwork, setSelectedNetwork] = useState(0);
+  // null = no network plan chosen (skip)
+  const [selectedNetwork, setSelectedNetwork] = useState<number | null>(null);
   const [reserving, setReserving] = useState(false);
   const [reserved, setReserved] = useState<{ queuePosition: number; id: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -681,13 +733,19 @@ function CampaignModal({
           <div className="lg:w-[40%] relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-3xl lg:rounded-l-3xl lg:rounded-tr-none min-h-[300px]">
             <Image src={campaign.image} alt={campaign.product} fill className="object-cover" />
             <div className="absolute top-6 left-6">
-              <span className="px-4 py-2 rounded-2xl bg-purple-600 text-white text-xs font-black uppercase tracking-widest shadow-xl">⭐ Preorder</span>
+              <span className="px-4 py-2 rounded-2xl bg-[#04a1c6] text-white text-xs font-black uppercase tracking-widest shadow-xl">
+                ⭐ Preorder
+              </span>
             </div>
             <div className="absolute bottom-6 left-6 flex gap-2">
               {campaign.colors.map((color, i) => (
-                <button key={color.name} onClick={() => setSelectedColor(i)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all cursor-pointer ${selectedColor === i ? "border-purple-500 scale-110 shadow-lg" : "border-white/50"}`}
-                  style={{ backgroundColor: color.hex }} title={color.name} aria-label={`Select ${color.name}`}
+                <button
+                  key={color.name}
+                  onClick={() => setSelectedColor(i)}
+                  className={`w-8 h-8 rounded-full border-2 transition-all cursor-pointer ${selectedColor === i ? "border-[#04a1c6] scale-110 shadow-lg" : "border-white/50"}`}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                  aria-label={`Select ${color.name}`}
                 />
               ))}
             </div>
@@ -697,7 +755,7 @@ function CampaignModal({
           <div className="lg:w-[60%] p-7 lg:p-9 flex flex-col">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <span className="text-xs font-black uppercase tracking-[0.2em] text-purple-500 block mb-1">{campaign.brand}</span>
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-[#04a1c6] block mb-1">{campaign.brand}</span>
                 <h2 className="text-2xl font-extrabold text-[#0f172a] tracking-tight">{campaign.product}</h2>
                 <p className="text-sm text-[#0f172a]/50 mt-1">{campaign.subtitle}</p>
               </div>
@@ -710,7 +768,7 @@ function CampaignModal({
               Color: <span className="font-bold text-[#0f172a]">{campaign.colors[selectedColor].name}</span>
             </div>
 
-            {/* ── Seller Identity (full detail) ── */}
+            {/* Seller Identity */}
             <div className={`p-4 rounded-2xl ${meta.bgColor} border ${meta.borderColor} mb-5`}>
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">{meta.emoji}</span>
@@ -735,18 +793,24 @@ function CampaignModal({
             </div>
 
             {/* Queue Status */}
-            <div className="bg-purple-50 rounded-2xl p-4 mb-5 border border-purple-100">
+            <div className="bg-[#04a1c6]/5 rounded-2xl p-4 mb-5 border border-[#04a1c6]/15">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-bold text-purple-700 flex items-center gap-2"><Users className="w-4 h-4" /> Queue Status</span>
-                <span className="text-sm font-black text-purple-600">{pct}% filled</span>
+                <span className="text-sm font-bold text-[#04a1c6] flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Queue Status
+                </span>
+                <span className="text-sm font-black text-[#04a1c6]">{pct}% filled</span>
               </div>
-              <div className="h-2.5 bg-purple-200/50 rounded-full overflow-hidden mb-2">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1 }}
-                  className="h-full rounded-full bg-gradient-to-r from-purple-400 to-purple-600" />
+              <div className="h-2.5 bg-[#04a1c6]/10 rounded-full overflow-hidden mb-2">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 1 }}
+                  className="h-full rounded-full bg-gradient-to-r from-[#04a1c6] to-[#0390b0]"
+                />
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-purple-500">{campaign.slotsFilled.toLocaleString()} reserved</span>
-                <span className="font-bold text-purple-700">{slotsLeft.toLocaleString()} slots remaining</span>
+                <span className="text-[#04a1c6]/70">{campaign.slotsFilled.toLocaleString()} reserved</span>
+                <span className="font-bold text-[#04a1c6]">{slotsLeft.toLocaleString()} slots remaining</span>
               </div>
             </div>
 
@@ -754,7 +818,7 @@ function CampaignModal({
             <div className="grid grid-cols-3 gap-3 mb-5">
               <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 text-center">
                 <span className="text-[9px] font-bold text-[#0f172a]/40 uppercase block mb-1">Deposit</span>
-                <span className="text-2xl font-black text-purple-600">${campaign.deposit}</span>
+                <span className="text-2xl font-black text-[#04a1c6]">${campaign.deposit}</span>
                 <span className="text-[9px] text-[#0f172a]/40 block">Refundable</span>
               </div>
               <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 text-center">
@@ -778,18 +842,19 @@ function CampaignModal({
               ))}
             </div>
 
-            {/* ── Network Partner Selection ── */}
+            {/* Network Partner Selection */}
             <div className="mb-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/40 mb-3">Choose Your Network — eSIM activates at checkout</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/40 mb-1">Choose Your Network</p>
+              <p className="text-[11px] text-[#0f172a]/40 mb-3">eSIM activates at checkout — or skip if you have a carrier.</p>
               <div className="space-y-2">
                 {campaign.networkPartners.map((np, i) => (
                   <button
                     key={np.name}
-                    onClick={() => setSelectedNetwork(i)}
+                    onClick={() => setSelectedNetwork(selectedNetwork === i ? null : i)}
                     className={`w-full flex items-center gap-4 p-3.5 rounded-xl border transition-all cursor-pointer text-left ${
                       selectedNetwork === i
-                        ? "bg-cyan-50 border-cyan-300 shadow-md"
-                        : "bg-white border-gray-100 hover:border-cyan-200"
+                        ? "bg-[#04a1c6]/5 border-[#04a1c6]/40 shadow-md"
+                        : "bg-white border-gray-100 hover:border-[#04a1c6]/30"
                     }`}
                   >
                     <span className="text-2xl">{np.logo}</span>
@@ -808,17 +873,34 @@ function CampaignModal({
                       </div>
                       <span className="text-xs text-[#0f172a]/50">{np.planName} — {np.data} data</span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <span className="text-lg font-black text-[#0f172a]">${np.monthlyPrice}</span>
                       <span className="text-[10px] text-[#0f172a]/40 block">/mo</span>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedNetwork === i ? "border-cyan-500 bg-cyan-500" : "border-gray-300"
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      selectedNetwork === i ? "border-[#04a1c6] bg-[#04a1c6]" : "border-gray-300"
                     }`}>
                       {selectedNetwork === i && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                   </button>
                 ))}
+
+                {/* Skip option */}
+                <button
+                  onClick={() => setSelectedNetwork(null)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                    selectedNetwork === null
+                      ? "bg-gray-100 border-gray-300"
+                      : "bg-white border-gray-100 hover:border-gray-300"
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    selectedNetwork === null ? "border-gray-500 bg-gray-500" : "border-gray-300"
+                  }`}>
+                    {selectedNetwork === null && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </div>
+                  <span className="text-xs font-semibold text-[#0f172a]/50">I already have a carrier — skip for now</span>
+                </button>
               </div>
             </div>
 
@@ -839,13 +921,18 @@ function CampaignModal({
 
             <AnimatePresence>
               {showTradeIn && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-4">
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden mb-4"
+                >
                   <TradeInLockPanel bonus={campaign.tradeInBonus} />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* B2B demand (for wholesaler campaigns) */}
+            {/* B2B Demand Forecast */}
             {(campaign.wholesalerDemand > 0 || campaign.retailerInterest > 0) && (
               <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 mb-5">
                 <div className="flex items-center gap-2 mb-2">
@@ -915,7 +1002,7 @@ function CampaignModal({
                     whileTap={{ scale: 0.98 }}
                     onClick={handleReserve}
                     disabled={reserving}
-                    className="flex-[2] py-4 rounded-2xl bg-purple-600 text-white font-black text-sm uppercase tracking-widest hover:bg-purple-700 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xl shadow-purple-500/20 disabled:opacity-50"
+                    className="flex-[2] py-4 rounded-2xl bg-[#04a1c6] text-white font-black text-sm uppercase tracking-widest hover:bg-[#0390b0] transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xl shadow-[#04a1c6]/20 disabled:opacity-50"
                   >
                     {reserving ? (
                       <span className="flex items-center gap-2">
@@ -923,17 +1010,18 @@ function CampaignModal({
                         Reserving...
                       </span>
                     ) : (
-                      <>
-                        <Lock className="w-4 h-4" /> Reserve — ${campaign.deposit} Deposit
-                      </>
+                      <span className="flex items-center gap-2">
+                        <Lock className="w-4 h-4" />
+                        Reserve My Spot — ${campaign.deposit}
+                      </span>
                     )}
                   </motion.button>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    className="py-4 px-5 rounded-2xl border-2 border-gray-200 text-[#0f172a]/60 hover:border-purple-300 hover:text-purple-600 transition-colors cursor-pointer"
-                    aria-label="Get notified"
+                  <button
+                    onClick={onClose}
+                    className="flex-1 py-4 rounded-2xl border-2 border-gray-200 text-[#0f172a]/60 font-black text-sm uppercase tracking-widest hover:border-gray-300 transition-all cursor-pointer"
                   >
-                    <Bell className="w-5 h-5" />
-                  </motion.button>
+                    Cancel
+                  </button>
                 </div>
               </>
             )}
@@ -947,95 +1035,66 @@ function CampaignModal({
 // ─── Trade-In Lock Panel ────────────────────────────────────────────────────
 
 function TradeInLockPanel({ bonus }: { bonus: number }) {
-  const [selectedDevice, setSelectedDevice] = useState("");
-  const [condition, setCondition] = useState("");
+  const [model, setModel] = useState("");
+  const [condition, setCondition] = useState("Good");
 
-  const TRADE_DEVICES = [
-    { name: "iPhone 17 Pro", base: 520 },
-    { name: "iPhone 17 Pro Max", base: 600 },
-    { name: "iPhone 16 Pro", base: 380 },
-    { name: "iPhone 16 Pro Max", base: 440 },
-    { name: "Galaxy S26 Ultra", base: 480 },
-    { name: "Galaxy S25 Ultra", base: 350 },
-    { name: "Pixel 10 Pro", base: 320 },
-    { name: "Pixel 9 Pro", base: 220 },
-  ];
+  const baseValues: Record<string, number> = {
+    "iPhone 16 Pro Max": 850, "iPhone 16 Pro": 720, "iPhone 16": 580,
+    "Samsung S25 Ultra": 780, "Samsung S25+": 650, "Pixel 9 Pro": 520,
+  };
 
-  const CONDITIONS = [
-    { label: "Like New", multiplier: 1.0 },
-    { label: "Good", multiplier: 0.8 },
-    { label: "Fair", multiplier: 0.6 },
-  ];
+  const conditionMultipliers: Record<string, number> = {
+    "Like New": 1.0, "Good": 0.85, "Fair": 0.7, "Poor": 0.5,
+  };
 
-  const device = TRADE_DEVICES.find((d) => d.name === selectedDevice);
-  const cond = CONDITIONS.find((c) => c.label === condition);
-  const baseValue = device && cond ? Math.round(device.base * cond.multiplier) : 0;
-  const bonusValue = Math.round(baseValue * (bonus / 100));
-  const totalValue = baseValue + bonusValue;
+  const baseValue = model ? (baseValues[model] || 400) : 0;
+  const conditionValue = Math.round(baseValue * (conditionMultipliers[condition] || 0.85));
+  const bonusValue = Math.round(conditionValue * bonus / 100);
+  const totalValue = conditionValue + bonusValue;
 
   return (
-    <div className="p-5 rounded-2xl bg-amber-50 border border-amber-100">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-4">
+      <h4 className="text-sm font-black text-amber-800 mb-4 flex items-center gap-2">
+        <ArrowLeftRight className="w-4 h-4" /> Trade-In Value Estimator
+      </h4>
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
-          <label className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block mb-1.5">Your Current Device</label>
+          <label className="text-[10px] font-bold text-amber-600 uppercase block mb-1">Your Device</label>
           <select
-            value={selectedDevice}
-            onChange={(e) => setSelectedDevice(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border border-amber-200 bg-white text-sm font-medium text-[#0f172a] cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-300"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-amber-200 bg-white text-xs font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer"
           >
-            <option value="">Select device...</option>
-            {TRADE_DEVICES.map((d) => (
-              <option key={d.name} value={d.name}>{d.name}</option>
-            ))}
+            <option value="">Select model...</option>
+            {Object.keys(baseValues).map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block mb-1.5">Condition</label>
-          <div className="flex gap-2">
-            {CONDITIONS.map((c) => (
-              <button
-                key={c.label}
-                onClick={() => setCondition(c.label)}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  condition === c.label
-                    ? "bg-amber-500 text-white"
-                    : "bg-white border border-amber-200 text-amber-700 hover:bg-amber-100"
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
+          <label className="text-[10px] font-bold text-amber-600 uppercase block mb-1">Condition</label>
+          <select
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-amber-200 bg-white text-xs font-medium text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-amber-300 cursor-pointer"
+          >
+            {["Like New", "Good", "Fair", "Poor"].map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
       </div>
-
-      {totalValue > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-xl bg-white border border-amber-200"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-amber-700">Base trade-in value</span>
-            <span className="text-sm font-bold text-[#0f172a]">${baseValue}</span>
+      {model && (
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="p-3 bg-white rounded-xl border border-amber-100">
+            <span className="text-[9px] font-bold text-amber-400 uppercase block">Base Value</span>
+            <span className="text-lg font-black text-amber-700">${conditionValue}</span>
           </div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-amber-700 flex items-center gap-1">
-              <Zap className="w-3 h-3 text-amber-500" /> Preorder bonus (+{bonus}%)
-            </span>
-            <span className="text-sm font-bold text-emerald-600">+${bonusValue}</span>
+          <div className="p-3 bg-amber-500 rounded-xl">
+            <span className="text-[9px] font-bold text-amber-100 uppercase block">+{bonus}% Bonus</span>
+            <span className="text-lg font-black text-white">+${bonusValue}</span>
           </div>
-          <div className="h-px bg-amber-200 my-2" />
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-amber-800 flex items-center gap-1">
-              <Lock className="w-3 h-3" /> Locked-in value
-            </span>
-            <span className="text-xl font-black text-amber-700">${totalValue}</span>
+          <div className="p-3 bg-amber-700 rounded-xl">
+            <span className="text-[9px] font-bold text-amber-200 uppercase block">Total</span>
+            <span className="text-lg font-black text-white">${totalValue}</span>
           </div>
-          <p className="text-[10px] text-amber-500 mt-2">
-            This value is guaranteed as your down payment until release day. No surprises.
-          </p>
-        </motion.div>
+        </div>
       )}
     </div>
   );

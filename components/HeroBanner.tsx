@@ -3,6 +3,7 @@ import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation } from "swiper/modules";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 // Import Swiper styles
 import "swiper/css";
@@ -13,19 +14,21 @@ const SLIDES = [
   {
     id: 1,
     title: "iPhone 18 Pro Preorder",
-    subtitle: "Lock in your trade-in value today.",
+    subtitle: "Lock in your trade-in value today. Be first in line.",
     cta: "Join the Queue",
+    href: "/preorder",
     desktopImg:
-      "https://images.unsplash.com/photo-1652887640398-4cdef235bc0c?q=80&w=2560&auto=format&fit=crop", // abstract/premium phone vibe
+      "https://images.unsplash.com/photo-1652887640398-4cdef235bc0c?q=80&w=2560&auto=format&fit=crop",
     mobileImg:
       "https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=1080&auto=format&fit=crop",
     color: "from-black/80 to-transparent",
   },
   {
     id: 2,
-    title: "SelectMobile MVNO + Unlocked",
-    subtitle: "Stop overpaying for contracts. Save up to $800 over 24 months.",
-    cta: "Calculate Savings",
+    title: "Your Carrier. Your Rules.",
+    subtitle: "Skip the contract. Keep your phone. Save up to $800 over 24 months.",
+    cta: "Calculate My Savings",
+    href: "/tco-calculator",
     desktopImg:
       "https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=2560&auto=format&fit=crop",
     mobileImg:
@@ -35,8 +38,9 @@ const SLIDES = [
   {
     id: 3,
     title: "Premium Accessories",
-    subtitle: "Enhance your experience with Select-Verified gear.",
+    subtitle: "Tested, certified, and ready to ship. Gear that's built to last.",
     cta: "Shop Accessories",
+    href: "/normal-order",
     desktopImg:
       "https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=2560&auto=format&fit=crop",
     mobileImg:
@@ -106,16 +110,18 @@ export function HeroBanner() {
                   >
                     {slide.subtitle}
                   </motion.p>
-                  <motion.button 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(4,161,198,0.8)" }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ duration: 0.5, delay: 0.6 }}
-                    className="px-10 py-4 rounded-full bg-[#04a1c6] text-white font-bold text-lg transition-all shadow-[0_0_20px_rgba(4,161,198,0.4)] backdrop-blur-md border border-[#04a1c6]/50 cursor-pointer"
-                  >
-                    {slide.cta}
-                  </motion.button>
+                  <Link href={slide.href}>
+                    <motion.span
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(4,161,198,0.8)" }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                      className="inline-block px-10 py-4 rounded-full bg-[#04a1c6] text-white font-bold text-lg transition-all shadow-[0_0_20px_rgba(4,161,198,0.4)] backdrop-blur-md border border-[#04a1c6]/50 cursor-pointer"
+                    >
+                      {slide.cta}
+                    </motion.span>
+                  </Link>
                 </motion.div>
               </div>
             </div>

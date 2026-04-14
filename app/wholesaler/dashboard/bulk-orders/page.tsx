@@ -32,61 +32,7 @@ interface Order {
   progress: number;
 }
 
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "ORD-9A4B-2X",
-    buyer: {
-      name: "Marcus Chen",
-      company: "TechDistro Inc.",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
-      location: "Toronto, ON"
-    },
-    items: [
-      { name: "iPhone 15 Pro M", qty: 250 },
-      { name: "Galaxy S24 Ultra", qty: 100 }
-    ],
-    status: "Processing",
-    totalValue: "$345,000",
-    paymentStatus: "ESCROW FUNDED",
-    date: "Oct 24, 2026",
-    progress: 45
-  },
-  {
-    id: "ORD-7K9P-1Y",
-    buyer: {
-      name: "Sarah Jenkins",
-      company: "Mobile City Retail",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop",
-      location: "Vancouver, BC"
-    },
-    items: [
-      { name: "iPhone 14 (Refurbished)", qty: 500 }
-    ],
-    status: "In Transit",
-    totalValue: "$210,000",
-    paymentStatus: "ESCROW FUNDED",
-    date: "Oct 22, 2026",
-    progress: 75
-  },
-  {
-    id: "ORD-3M2N-8Z",
-    buyer: {
-      name: "Ahmed Hassan",
-      company: "Global Comm Systems",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop",
-      location: "Montreal, QC"
-    },
-    items: [
-      { name: "Google Pixel 8 Pro", qty: 150 },
-      { name: "OnePlus 12", qty: 50 }
-    ],
-    status: "Pending",
-    totalValue: "$185,500",
-    paymentStatus: "PENDING",
-    date: "Oct 25, 2026",
-    progress: 10
-  }
-];
+const MOCK_ORDERS: Order[] = [];
 
 export default function WholesalerBulkOrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");

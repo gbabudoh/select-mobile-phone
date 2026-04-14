@@ -1,13 +1,14 @@
 "use client";
 import React from "react";
 import { OverviewContent } from "@/components/dashboard/OverviewContent";
-import { Smartphone, DollarSign, Star, ShieldCheck, Plus, Search, HelpCircle } from "lucide-react";
+import { Smartphone, DollarSign, Star, ShieldCheck, Plus, Search, HelpCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const STATS = [
-  { label: "Phone for Sale", value: "1", icon: Smartphone, color: "from-blue-500 to-cyan-500", trend: "1/1 slot used" },
-  { label: "Potential Sale", value: "$450", icon: DollarSign, color: "from-emerald-500 to-teal-500", trend: "Based on market" },
-  { label: "My Rating", value: "New", icon: Star, color: "from-amber-500 to-orange-500", trend: "Pending activity" },
-  { label: "Protection", value: "Active", icon: ShieldCheck, color: "from-purple-500 to-indigo-500", trend: "Escrow enabled" },
+  { label: "Phone for Sale", value: "0", icon: Smartphone, color: "from-blue-500 to-cyan-500", trend: "-" },
+  { label: "Potential Sale", value: "$0.00", icon: DollarSign, color: "from-emerald-500 to-teal-500", trend: "-" },
+  { label: "My Rating", value: "-", icon: Star, color: "from-amber-500 to-orange-500", trend: "-" },
+  { label: "Protection", value: "-", icon: ShieldCheck, color: "from-purple-500 to-indigo-500", trend: "-" },
 ];
 
 const ACTIONS = [
@@ -18,15 +19,20 @@ const ACTIONS = [
 
 export default function IndividualDashboard() {
   return (
-    <OverviewContent 
-      title="Individual Seller" 
-      subtitle="Sell your personal devices with confidence."
-      stats={STATS} 
-      quickActions={ACTIONS}
-      recentActivity={[
-        { text: "Identity verification initiated", time: "2 hours ago", status: "Pending", statusColor: "bg-amber-100 text-amber-700", icon: ShieldCheck },
-        { text: "Welcome to Select Mobile!", time: "1 day ago", status: "New", statusColor: "bg-blue-100 text-blue-700", icon: Smartphone },
-      ]}
-    />
+    <div className="space-y-6">
+      <Link 
+        href="/" 
+        className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-[#04a1c6] transition-colors uppercase tracking-widest gap-2"
+      >
+        <ArrowLeft className="w-4 h-4" /> go to homepage
+      </Link>
+      <OverviewContent 
+        title="Individual Seller" 
+        subtitle="Sell your personal devices with confidence."
+        stats={STATS} 
+        quickActions={ACTIONS}
+        recentActivity={[]}
+      />
+    </div>
   );
 }

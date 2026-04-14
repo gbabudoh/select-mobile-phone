@@ -29,28 +29,7 @@ const STATUS_MAP: Record<TradeInStatus, { label: string; color: string; icon: Re
 };
 
 // Sample data — in production this would come from the API
-const SAMPLE_TRADE_INS: TradeInItem[] = [
-  {
-    id: "TI-001",
-    device: "iPhone 16 Pro 256GB",
-    condition: "Like New",
-    quotedValue: 380,
-    status: "LOCKED_IN",
-    lockedUntil: "Sep 15, 2026",
-    linkedPreorder: "iPhone 18 Pro Max",
-    createdAt: "Jun 17, 2026",
-  },
-  {
-    id: "TI-002",
-    device: "Galaxy S25 Ultra 512GB",
-    condition: "Good",
-    quotedValue: 280,
-    status: "QUOTE_GIVEN",
-    lockedUntil: null,
-    linkedPreorder: null,
-    createdAt: "Feb 28, 2026",
-  },
-];
+const SAMPLE_TRADE_INS: TradeInItem[] = [];
 
 const TRADE_DEVICES = [
   { name: "iPhone 17 Pro Max", base: 600 },

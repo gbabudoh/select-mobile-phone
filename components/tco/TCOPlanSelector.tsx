@@ -37,17 +37,23 @@ export function TCOPlanSelector({
             </div>
             <span className="text-4xl font-black text-[#04a1c6]">${carrierPrice}</span>
           </div>
-          <div className="relative h-6 flex items-center">
-            <input
-              id="carrier-plan-slider"
-              type="range"
-              min="50"
-              max="150"
-              step="5"
-              value={carrierPrice}
-              onChange={(e) => onCarrierPriceChange(Number(e.target.value))}
-              className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#04a1c6]"
-            />
+          <div className="space-y-2">
+            <div className="relative h-6 flex items-center">
+              <input
+                id="carrier-plan-slider"
+                type="range"
+                min="50"
+                max="150"
+                step="5"
+                value={carrierPrice}
+                onChange={(e) => onCarrierPriceChange(Number(e.target.value))}
+                className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#04a1c6]"
+              />
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[10px] font-bold text-white/30">$50</span>
+              <span className="text-[10px] font-bold text-white/30">$150</span>
+            </div>
           </div>
         </div>
       </div>
@@ -97,7 +103,7 @@ export function TCOPlanSelector({
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">/mo</span>
                   </div>
                   {plan.planDetails && (
-                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-4 flex items-center gap-2 text-white">
+                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-4 flex items-center gap-2">
                         <span className="text-[#04a1c6]">{plan.planDetails.data}</span> Data · {plan.planDetails.talk} Talk
                      </p>
                   )}

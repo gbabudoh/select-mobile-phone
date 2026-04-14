@@ -2,16 +2,16 @@
 import React from "react";
 import { OverviewContent } from "@/components/dashboard/OverviewContent";
 import {
-  Package, ShoppingCart,
-  ArrowLeftRight, DollarSign,
-  Search, Zap, Shield
+  Package, ShoppingCart, ArrowLeftRight, DollarSign,
+  Search, Zap, Shield, ArrowLeft, LucideIcon
 } from "lucide-react";
+import Link from "next/link";
 
 const STATS = [
-  { label: "Active Orders", value: "3", icon: ShoppingCart, color: "from-cyan-500 to-blue-500", trend: "+1 this week" },
-  { label: "Preorders", value: "1", icon: Package, color: "from-purple-500 to-indigo-500", trend: "Position #12" },
-  { label: "Trade-In Credits", value: "$350", icon: ArrowLeftRight, color: "from-emerald-500 to-teal-500", trend: "Locked" },
-  { label: "Total Saved", value: "$680", icon: DollarSign, color: "from-orange-500 to-rose-500", trend: "+$40 saving" },
+  { label: "Active Orders", value: "0", icon: ShoppingCart, color: "from-cyan-500 to-blue-500", trend: "-" },
+  { label: "Preorders", value: "0", icon: Package, color: "from-purple-500 to-indigo-500", trend: "-" },
+  { label: "Trade-In Credits", value: "$0.00", icon: ArrowLeftRight, color: "from-emerald-500 to-teal-500", trend: "-" },
+  { label: "Total Saved", value: "$0.00", icon: DollarSign, color: "from-orange-500 to-rose-500", trend: "-" },
 ];
 
 const ACTIONS = [
@@ -21,19 +21,23 @@ const ACTIONS = [
   { label: "Escrow Status", desc: "Your funds are safe", icon: Shield, href: "/buyer/dashboard/orders", color: "text-emerald-600 bg-emerald-50" },
 ];
 
-const RECENT_ACTIVITY = [
-  { text: "Order #SM-4821 shipped — iPhone 18 Pro", time: "2 hours ago", status: "Shipped", statusColor: "bg-emerald-100 text-emerald-700", icon: ShoppingCart },
-  { text: "Preorder queue position updated — #12 of 500", time: "5 hours ago", status: "Updated", statusColor: "bg-cyan-100 text-cyan-700", icon: Package },
-  { text: "Trade-in quote locked — $350 for iPhone 16 Pro", time: "1 day ago", status: "Locked", statusColor: "bg-purple-100 text-purple-700", icon: ArrowLeftRight },
-];
+const RECENT_ACTIVITY: Array<{ text: string; time: string; status: string; statusColor: string; icon: LucideIcon }> = [];
 
 export default function DashboardOverview() {
   return (
-    <OverviewContent 
-      title="Dashboard" 
-      stats={STATS} 
-      quickActions={ACTIONS}
-      recentActivity={RECENT_ACTIVITY}
-    />
+    <div className="space-y-6">
+      <Link 
+        href="/" 
+        className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-[#04a1c6] transition-colors uppercase tracking-widest gap-2"
+      >
+        <ArrowLeft className="w-4 h-4" /> go to homepage
+      </Link>
+      <OverviewContent 
+        title="Dashboard" 
+        stats={STATS} 
+        quickActions={ACTIONS}
+        recentActivity={RECENT_ACTIVITY}
+      />
+    </div>
   );
 }

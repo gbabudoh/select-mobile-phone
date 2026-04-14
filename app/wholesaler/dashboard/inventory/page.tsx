@@ -37,76 +37,10 @@ interface InventoryItem {
   warehouse: string;
 }
 
-// --- Mock Initial Data ---
-const INITIAL_INVENTORY: InventoryItem[] = [
-  {
-    id: "WH-001",
-    sku: "IP15-PRO-256-BLK",
-    name: "iPhone 15 Pro",
-    brand: "Apple",
-    category: "smartphones",
-    image: "https://images.unsplash.com/photo-1696446701796-da61225697cc?w=400&h=400&fit=crop",
-    stock: { available: 1450, reserved: 200, incoming: 500 },
-    tiers: [
-      { qty: "10-49", price: "$899" },
-      { qty: "50-99", price: "$875" },
-      { qty: "100+", price: "$850" }
-    ],
-    status: "In Stock",
-    warehouse: "Jersey City, NJ"
-  },
-  {
-    id: "WH-002",
-    sku: "S24-ULT-512-GRY",
-    name: "Galaxy S24 Ultra",
-    brand: "Samsung",
-    category: "smartphones",
-    image: "https://images.unsplash.com/photo-1707248107513-3606992d5440?w=400&h=400&fit=crop",
-    stock: { available: 820, reserved: 150, incoming: 300 },
-    tiers: [
-      { qty: "10-49", price: "$999" },
-      { qty: "50-99", price: "$970" },
-      { qty: "100+", price: "$940" }
-    ],
-    status: "In Stock",
-    warehouse: "Dallas, TX"
-  },
-  {
-    id: "WH-003",
-    sku: "PIX8-PRO-128-OBD",
-    name: "Pixel 8 Pro",
-    brand: "Google",
-    category: "smartphones",
-    image: "https://images.unsplash.com/photo-1696426914561-bf969a68cc34?w=400&h=400&fit=crop",
-    stock: { available: 45, reserved: 20, incoming: 100 },
-    tiers: [
-      { qty: "10-49", price: "$699" },
-      { qty: "50-99", price: "$675" },
-      { qty: "100+", price: "$650" }
-    ],
-    status: "Low Stock",
-    warehouse: "Jersey City, NJ"
-  },
-  {
-    id: "WH-004",
-    sku: "IPAD-PRO-M4-11",
-    name: "iPad Pro M4 11\"",
-    brand: "Apple",
-    category: "tablets",
-    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop",
-    stock: { available: 310, reserved: 50, incoming: 150 },
-    tiers: [
-      { qty: "5-19", price: "$949" },
-      { qty: "20-49", price: "$910" },
-      { qty: "50+", price: "$880" }
-    ],
-    status: "In Stock",
-    warehouse: "Portland, OR"
-  }
-];
+
 
 export default function WholesalerInventoryPage() {
-  const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -260,20 +194,7 @@ export default function WholesalerInventoryPage() {
           
           // Add dummy imported items
           setTimeout(() => {
-            const newItems: InventoryItem[] = [
-               {
-                 id: `WH-IMP-${Date.now()}`,
-                 sku: "SAMS-A54-128",
-                 name: "Galaxy A54 5G",
-                 brand: "Samsung",
-                 category: "smartphones",
-                 image: "https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?w=400&h=400&fit=crop",
-                 stock: { available: 500, reserved: 0, incoming: 0 },
-                 tiers: [ { qty: "10-49", price: "$350" }, { qty: "50+", price: "$320" }, { qty: "100+", price: "$300" } ],
-                 status: "In Stock",
-                 warehouse: "Chicago, IL"
-               }
-            ];
+            const newItems: InventoryItem[] = [];
             setInventory(prev => [...newItems, ...prev]);
             setIsImportModalOpen(false);
             addToast("Batch import successful: 500 units added", "success");

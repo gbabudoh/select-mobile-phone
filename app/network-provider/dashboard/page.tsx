@@ -1,13 +1,14 @@
 "use client";
 import React from "react";
 import { OverviewContent } from "@/components/dashboard/OverviewContent";
-import { Cpu, Layers, Coins, TrendingDown, Plus, Zap, Percent, Activity } from "lucide-react";
+import { Cpu, Layers, Coins, TrendingDown, Plus, Zap, Percent, Activity, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const STATS = [
-  { label: "Active eSIMs", value: "1,842", icon: Cpu, color: "from-cyan-600 to-blue-600", trend: "+34 today" },
-  { label: "Provisioned Plans", value: "8", icon: Layers, color: "from-purple-600 to-indigo-600", trend: "Latest: 5G Unlimited" },
-  { label: "Bounty Payout", value: "$4,120", icon: Coins, color: "from-emerald-600 to-teal-600", trend: "Next: Mar 15" },
-  { label: "Churn Rate", value: "2.1%", icon: TrendingDown, color: "from-rose-600 to-pink-600", trend: "-0.5% this month" },
+  { label: "Active eSIMs", value: "0", icon: Cpu, color: "from-cyan-600 to-blue-600", trend: "-" },
+  { label: "Provisioned Plans", value: "0", icon: Layers, color: "from-purple-600 to-indigo-600", trend: "-" },
+  { label: "Bounty Payout", value: "$0.00", icon: Coins, color: "from-emerald-600 to-teal-600", trend: "-" },
+  { label: "Churn Rate", value: "-", icon: TrendingDown, color: "from-rose-600 to-pink-600", trend: "-" },
 ];
 
 const ACTIONS = [
@@ -19,15 +20,19 @@ const ACTIONS = [
 
 export default function NetworkProviderDashboard() {
   return (
-    <OverviewContent 
-      title="Provider Ops" 
-      stats={STATS} 
-      quickActions={ACTIONS}
-      recentActivity={[
-        { text: "eSIM Activation successful — +$15 Bounty", time: "5 mins ago", status: "Active", statusColor: "bg-emerald-100 text-emerald-700", icon: Cpu },
-        { text: "New 5G Plan 'Flanker Pro' published", time: "2 hours ago", status: "Published", statusColor: "bg-blue-100 text-blue-700", icon: Layers },
-        { text: "API Health Check: Latency 42ms", time: "1 hour ago", status: "Healthy", statusColor: "bg-cyan-100 text-cyan-700", icon: Activity },
-      ]}
-    />
+    <div className="space-y-6">
+      <Link 
+        href="/" 
+        className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-[#04a1c6] transition-colors uppercase tracking-widest gap-2"
+      >
+        <ArrowLeft className="w-4 h-4" /> go to homepage
+      </Link>
+      <OverviewContent 
+        title="Provider Ops" 
+        stats={STATS} 
+        quickActions={ACTIONS}
+        recentActivity={[]}
+      />
+    </div>
   );
 }

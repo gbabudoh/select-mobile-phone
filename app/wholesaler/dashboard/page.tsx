@@ -1,13 +1,14 @@
 "use client";
 import React from "react";
 import { OverviewContent } from "@/components/dashboard/OverviewContent";
-import { Building2, Truck, Users, Globe, PlusSquare, FileText, Send, ShieldCheck } from "lucide-react";
+import { Building2, Truck, Users, Globe, PlusSquare, FileText, Send, ShieldCheck, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const STATS = [
-  { label: "Total Units", value: "4,250", icon: Building2, color: "from-indigo-600 to-blue-600", trend: "Warehouse A: 85% cap" },
-  { label: "Bulk Pending", value: "14", icon: Truck, color: "from-emerald-600 to-teal-600", trend: "+2 today" },
-  { label: "Active Partners", value: "42", icon: Users, color: "from-amber-600 to-orange-600", trend: "3 onboarding" },
-  { label: "Global Reach", value: "12", icon: Globe, color: "from-rose-600 to-pink-600", trend: "Countries" },
+  { label: "Total Units", value: "0", icon: Building2, color: "from-indigo-600 to-blue-600", trend: "-" },
+  { label: "Bulk Pending", value: "0", icon: Truck, color: "from-emerald-600 to-teal-600", trend: "-" },
+  { label: "Active Partners", value: "0", icon: Users, color: "from-amber-600 to-orange-600", trend: "-" },
+  { label: "Global Reach", value: "0", icon: Globe, color: "from-rose-600 to-pink-600", trend: "-" },
 ];
 
 const ACTIONS = [
@@ -19,15 +20,19 @@ const ACTIONS = [
 
 export default function WholesalerDashboard() {
   return (
-    <OverviewContent 
-      title="Wholesale Portal" 
-      stats={STATS} 
-      quickActions={ACTIONS}
-      recentActivity={[
-        { text: "Bulk Order #WS-203 shipped — 50x iPhone 14", time: "1 hour ago", status: "In Transit", statusColor: "bg-blue-100 text-blue-700", icon: Truck },
-        { text: "Partner Application: Apex Retailer NYC", time: "3 hours ago", status: "Pending", statusColor: "bg-amber-100 text-amber-700", icon: Users },
-        { text: "Inventory Restock: Google Pixel 8 (100 units)", time: "Yesterday", status: "Restocked", statusColor: "bg-emerald-100 text-emerald-700", icon: Building2 },
-      ]}
-    />
+    <div className="space-y-6">
+      <Link 
+        href="/" 
+        className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-[#04a1c6] transition-colors uppercase tracking-widest gap-2"
+      >
+        <ArrowLeft className="w-4 h-4" /> go to homepage
+      </Link>
+      <OverviewContent 
+        title="Wholesale Portal" 
+        stats={STATS} 
+        quickActions={ACTIONS}
+        recentActivity={[]}
+      />
+    </div>
   );
 }
