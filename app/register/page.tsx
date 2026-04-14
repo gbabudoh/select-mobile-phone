@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Navigation } from "../../components/Navigation";
 import { 
   User as UserIcon, 
   ShoppingBag, 
@@ -149,7 +148,6 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen relative overflow-hidden bg-white text-slate-900">
       <div className="animated-bg" />
-      <Navigation />
 
       {/* Progress Stepper */}
       <div className="relative z-20 pt-32 px-6 flex justify-center">

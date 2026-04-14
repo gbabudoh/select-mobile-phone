@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Navigation } from "../../components/Navigation";
 import { 
   Mail, 
   Lock, 
@@ -54,6 +53,7 @@ export default function LoginPage() {
       else if (role === "WHOLESALER") dashboardPath = "/wholesaler/dashboard";
       else if (role === "NETWORK_PROVIDER") dashboardPath = "/network-provider/dashboard";
       else if (role === "INDIVIDUAL_SELLER") dashboardPath = "/individual/dashboard";
+      else if (role === "ADMIN" || role === "SUPER_ADMIN") dashboardPath = "/admin";
 
       router.push(dashboardPath);
     } catch (err: unknown) {
@@ -70,9 +70,8 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen relative overflow-hidden bg-white text-slate-900">
       <div className="animated-bg" />
-      <Navigation />
 
-      <div className="relative z-10 pt-40 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-12rem)]">
+      <div className="relative z-10 pt-16 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center justify-start min-h-[calc(100vh-12rem)]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

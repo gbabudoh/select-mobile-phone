@@ -20,6 +20,7 @@ enum UserRole {
   WHOLESALER
   NETWORK_PROVIDER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum AccountStatus {
@@ -69,13 +70,13 @@ enum OrderType {
 
 enum OrderStatus {
   PENDING_PAYMENT
-  PAYMENT_HELD       // Escrow: funds captured
+  PAYMENT_HELD // Escrow: funds captured
   PROCESSING
-  DIAGNOSTIC_CHECK   // 50-point verification in progress
+  DIAGNOSTIC_CHECK // 50-point verification in progress
   SHIPPED
   DELIVERED
-  BUYER_CONFIRMED    // Buyer confirmed IMEI + SIM activation
-  COMPLETED          // Escrow released to seller
+  BUYER_CONFIRMED // Buyer confirmed IMEI + SIM activation
+  COMPLETED // Escrow released to seller
   DISPUTED
   REFUNDED
   CANCELLED
@@ -139,6 +140,27 @@ enum Country {
   CA
 }
 
+enum KycDocumentType {
+  PASSPORT
+  SSN
+  BUSINESS_INCORPORATION
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_REFUND
+  RESOLVED_RELEASE
+  CLOSED
+}
+
+enum DisputeReason {
+  ITEM_NOT_RECEIVED
+  NOT_AS_DESCRIBED
+  ACTIVATION_FAILED
+  OTHER
+}
+
 // ─── USERS & PROFILES ──────────────────────────────────────────────────────
 
 model User {
@@ -156,42 +178,48 @@ model User {
   updatedAt     DateTime      @updatedAt
 
   // Profile extensions (one-to-one, role-specific)
-  wholesalerProfile     WholesalerProfile?
-  retailerProfile       RetailerProfile?
+  wholesalerProfile      WholesalerProfile?
+  retailerProfile        RetailerProfile?
   networkProviderProfile NetworkProviderProfile?
-  sellerProfile         IndividualSellerProfile?
-  buyerProfile          BuyerProfile?
+  sellerProfile          IndividualSellerProfile?
+  buyerProfile           BuyerProfile?
 
   // Relations
-  listings       Listing[]
-  ordersAsBuyer  Order[]          @relation("BuyerOrders")
-  ordersAsSeller Order[]          @relation("SellerOrders")
-  preorders      Preorder[]
-  tradeIns       TradeIn[]
-  chatSessions   ChatSession[]
-  reviews        Review[]         @relation("ReviewAuthor")
-  reviewsReceived Review[]        @relation("ReviewTarget")
-  notifications  Notification[]
-  addresses      Address[]
-  escrowsAsBuyer  Escrow[]        @relation("EscrowBuyer")
-  escrowsAsSeller Escrow[]        @relation("EscrowSeller")
+  listings        Listing[]
+  ordersAsBuyer   Order[]        @relation("BuyerOrders")
+  ordersAsSeller  Order[]        @relation("SellerOrders")
+  preorders       Preorder[]
+  tradeIns        TradeIn[]
+  chatSessions    ChatSession[]
+  reviews         Review[]       @relation("ReviewAuthor")
+  reviewsReceived Review[]       @relation("ReviewTarget")
+  notifications   Notification[]
+  addresses       Address[]
+  escrowsAsBuyer  Escrow[]       @relation("EscrowBuyer")
+  escrowsAsSeller Escrow[]       @relation("EscrowSeller")
+
+  kycDocuments      KycDocument[]
+  raisedDisputes    Dispute[]        @relation("DisputeRaiser")
+  defendingDisputes Dispute[]        @relation("DisputeDefender")
+  disputeMessages   DisputeMessage[]
+  deletionRequests  DeletionRequest[]
 
   @@index([role])
   @@index([status])
 }
 
 model Address {
-  id         String  @id @default(uuid())
+  id         String   @id @default(uuid())
   userId     String
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   label      String? // "Home", "Warehouse", "Store"
   line1      String
   line2      String?
   city       String
   state      String
   postalCode String
-  country    Country @default(US)
-  isDefault  Boolean @default(false)
+  country    Country  @default(US)
+  isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   orders Order[]
@@ -210,7 +238,7 @@ model WholesalerProfile {
   taxId             String?
   warehouseAddress  String?
   verification      VerificationStatus @default(UNVERIFIED)
-  bulkDiscountTiers Json?              // e.g. [{ minQty: 10, discountPct: 5 }, ...]
+  bulkDiscountTiers Json? // e.g. [{ minQty: 10, discountPct: 5 }, ...]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
@@ -218,17 +246,17 @@ model WholesalerProfile {
 }
 
 model RetailerProfile {
-  id               String             @id @default(uuid())
-  userId           String             @unique
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storeName        String
-  storeUrl         String?
-  businessLicense  String?
-  taxId            String?
-  verification     VerificationStatus @default(UNVERIFIED)
-  preferredRegion  Country            @default(US)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id              String             @id @default(uuid())
+  userId          String             @unique
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName       String
+  storeUrl        String?
+  businessLicense String?
+  taxId           String?
+  verification    VerificationStatus @default(UNVERIFIED)
+  preferredRegion Country            @default(US)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 }
 
 model NetworkProviderProfile {
@@ -236,8 +264,8 @@ model NetworkProviderProfile {
   userId          String             @unique
   user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   carrierName     String
-  carrierType     String             // MVNO, MNO, Flanker
-  coverageRegions Json?              // ["US", "CA"] or detailed coverage map
+  carrierType     String // MVNO, MNO, Flanker
+  coverageRegions Json? // ["US", "CA"] or detailed coverage map
   verification    VerificationStatus @default(UNVERIFIED)
   bountyFeePct    Float              @default(0) // Recurring bounty fee percentage
   createdAt       DateTime           @default(now())
@@ -261,59 +289,59 @@ model IndividualSellerProfile {
 }
 
 model BuyerProfile {
-  id                 String   @id @default(uuid())
-  userId             String   @unique
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  preferredCarrier   String?
-  preferredCountry   Country  @default(US)
-  savedSearches      Json?    // Saved filter presets
-  wishlist           Json?    // Array of product IDs
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferredCarrier String?
+  preferredCountry Country  @default(US)
+  savedSearches    Json? // Saved filter presets
+  wishlist         Json? // Array of product IDs
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 // ─── PRODUCTS & LISTINGS ────────────────────────────────────────────────────
 
 model Product {
-  id            String          @id @default(uuid())
-  brand         String          // Apple, Samsung, Google, etc.
-  model         String          // "iPhone 18 Pro", "Galaxy S26 Ultra"
-  category      ProductCategory
-  specs         Json?           // { ram, storage, color, screenSize, dualEsim, 5g, ... }
-  imageUrls     Json?           // Array of image URLs
-  releaseDate   DateTime?
-  msrp          Float?          // Manufacturer suggested retail price
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id          String          @id @default(uuid())
+  brand       String // Apple, Samsung, Google, etc.
+  model       String // "iPhone 18 Pro", "Galaxy S26 Ultra"
+  category    ProductCategory
+  specs       Json? // { ram, storage, color, screenSize, dualEsim, 5g, ... }
+  imageUrls   Json? // Array of image URLs
+  releaseDate DateTime?
+  msrp        Float? // Manufacturer suggested retail price
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
-  listings       Listing[]
+  listings          Listing[]
   preorderCampaigns PreorderCampaign[]
-  tradeIns       TradeIn[]
+  tradeIns          TradeIn[]
 
+  @@unique([brand, model])
   @@index([brand])
   @@index([category])
-  @@unique([brand, model])
 }
 
 model Listing {
-  id            String           @id @default(uuid())
-  sellerId      String
-  seller        User             @relation(fields: [sellerId], references: [id])
-  productId     String
-  product       Product          @relation(fields: [productId], references: [id])
-  title         String
-  description   String?
-  price         Float
-  currency      String           @default("USD")
-  condition     ProductCondition
-  quantity      Int              @default(1)
-  status        ListingStatus    @default(DRAFT)
-  imei          String?          // For individual device verification
-  isSelectVerified Boolean       @default(false)
+  id               String            @id @default(uuid())
+  sellerId         String
+  seller           User              @relation(fields: [sellerId], references: [id])
+  productId        String
+  product          Product           @relation(fields: [productId], references: [id])
+  title            String
+  description      String?
+  price            Float
+  currency         String            @default("USD")
+  condition        ProductCondition
+  quantity         Int               @default(1)
+  status           ListingStatus     @default(DRAFT)
+  imei             String? // For individual device verification
+  isSelectVerified Boolean           @default(false)
   diagnosticReport DiagnosticReport?
-  country       Country          @default(US)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  country          Country           @default(US)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   orderItems OrderItem[]
 
@@ -326,13 +354,13 @@ model Listing {
 
 // 50-point remote diagnostic check for Select-Verified listings
 model DiagnosticReport {
-  id          String           @id @default(uuid())
-  listingId   String           @unique
-  listing     Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  result      DiagnosticResult
-  score       Int              // 0-50 points
-  details     Json             // { battery: "PASS", screen: "PASS", ... }
-  checkedAt   DateTime         @default(now())
+  id        String           @id @default(uuid())
+  listingId String           @unique
+  listing   Listing          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  result    DiagnosticResult
+  score     Int // 0-50 points
+  details   Json // { battery: "PASS", screen: "PASS", ... }
+  checkedAt DateTime         @default(now())
 }
 
 // ─── WHOLESALER INVENTORY (B2B) ─────────────────────────────────────────────
@@ -346,7 +374,7 @@ model InventoryItem {
   quantityAvailable   Int
   quantityReserved    Int               @default(0)
   unitCost            Float
-  bulkPrice           Float?            // Discounted price for bulk
+  bulkPrice           Float? // Discounted price for bulk
   minOrderQty         Int               @default(1)
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
@@ -358,21 +386,21 @@ model InventoryItem {
 // ─── NETWORK PLANS & eSIM ───────────────────────────────────────────────────
 
 model NetworkPlan {
-  id                      String                 @id @default(uuid())
+  id                       String                 @id @default(uuid())
   networkProviderProfileId String
-  networkProviderProfile  NetworkProviderProfile @relation(fields: [networkProviderProfileId], references: [id], onDelete: Cascade)
-  name                    String                 // "Unlimited Cross-Border", "5GB Prepaid"
-  planType                PlanType
-  monthlyPrice            Float
-  dataLimitGB             Float?                 // null = unlimited
-  talkMinutes             Int?                   // null = unlimited
-  textMessages            Int?                   // null = unlimited
-  contractMonths          Int?                   // null = no contract (prepaid/BYOP)
-  coverageCountries       Json                   // ["US"], ["US","CA"], etc.
-  features                Json?                  // { hotspot: true, roaming: true, ... }
-  isActive                Boolean                @default(true)
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
+  networkProviderProfile   NetworkProviderProfile @relation(fields: [networkProviderProfileId], references: [id], onDelete: Cascade)
+  name                     String // "Unlimited Cross-Border", "5GB Prepaid"
+  planType                 PlanType
+  monthlyPrice             Float
+  dataLimitGB              Float? // null = unlimited
+  talkMinutes              Int? // null = unlimited
+  textMessages             Int? // null = unlimited
+  contractMonths           Int? // null = no contract (prepaid/BYOP)
+  coverageCountries        Json // ["US"], ["US","CA"], etc.
+  features                 Json? // { hotspot: true, roaming: true, ... }
+  isActive                 Boolean                @default(true)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
 
   esimProvisionings EsimProvisioning[]
   orderItems        OrderItem[]
@@ -382,13 +410,13 @@ model NetworkPlan {
 }
 
 model EsimInventory {
-  id                      String                 @id @default(uuid())
+  id                       String                 @id @default(uuid())
   networkProviderProfileId String
-  networkProviderProfile  NetworkProviderProfile @relation(fields: [networkProviderProfileId], references: [id], onDelete: Cascade)
-  activationCode          String                 @unique
-  iccid                   String                 @unique
-  isAssigned              Boolean                @default(false)
-  createdAt               DateTime               @default(now())
+  networkProviderProfile   NetworkProviderProfile @relation(fields: [networkProviderProfileId], references: [id], onDelete: Cascade)
+  activationCode           String                 @unique
+  iccid                    String                 @unique
+  isAssigned               Boolean                @default(false)
+  createdAt                DateTime               @default(now())
 
   provisioning EsimProvisioning?
 
@@ -397,17 +425,17 @@ model EsimInventory {
 }
 
 model EsimProvisioning {
-  id              String                  @id @default(uuid())
+  id              String                 @id @default(uuid())
   orderId         String
-  order           Order                   @relation(fields: [orderId], references: [id])
-  esimInventoryId String?                 @unique
-  esimInventory   EsimInventory?          @relation(fields: [esimInventoryId], references: [id])
+  order           Order                  @relation(fields: [orderId], references: [id])
+  esimInventoryId String?                @unique
+  esimInventory   EsimInventory?         @relation(fields: [esimInventoryId], references: [id])
   networkPlanId   String
-  networkPlan     NetworkPlan             @relation(fields: [networkPlanId], references: [id])
-  status          EsimProvisioningStatus  @default(PENDING)
+  networkPlan     NetworkPlan            @relation(fields: [networkPlanId], references: [id])
+  status          EsimProvisioningStatus @default(PENDING)
   activatedAt     DateTime?
   deactivatedAt   DateTime?
-  createdAt       DateTime                @default(now())
+  createdAt       DateTime               @default(now())
 
   @@index([orderId])
 }
@@ -415,31 +443,32 @@ model EsimProvisioning {
 // ─── ORDERS (Normal + Preorder) ─────────────────────────────────────────────
 
 model Order {
-  id              String      @id @default(uuid())
-  orderNumber     String      @unique @default(uuid())
-  buyerId         String
-  buyer           User        @relation("BuyerOrders", fields: [buyerId], references: [id])
-  sellerId        String
-  seller          User        @relation("SellerOrders", fields: [sellerId], references: [id])
-  orderType       OrderType
-  status          OrderStatus @default(PENDING_PAYMENT)
-  subtotal        Float
-  tax             Float       @default(0)
-  shippingCost    Float       @default(0)
-  totalAmount     Float
-  currency        String      @default("USD")
+  id                String      @id @default(uuid())
+  orderNumber       String      @unique @default(uuid())
+  buyerId           String
+  buyer             User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  sellerId          String
+  seller            User        @relation("SellerOrders", fields: [sellerId], references: [id])
+  orderType         OrderType
+  status            OrderStatus @default(PENDING_PAYMENT)
+  subtotal          Float
+  tax               Float       @default(0)
+  shippingCost      Float       @default(0)
+  totalAmount       Float
+  currency          String      @default("USD")
   shippingAddressId String?
-  shippingAddress Address?    @relation(fields: [shippingAddressId], references: [id])
-  trackingNumber  String?
-  notes           String?
-  country         Country     @default(US)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  shippingAddress   Address?    @relation(fields: [shippingAddressId], references: [id])
+  trackingNumber    String?
+  notes             String?
+  country           Country     @default(US)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
-  items           OrderItem[]
-  escrow          Escrow?
+  items             OrderItem[]
+  escrow            Escrow?
   esimProvisionings EsimProvisioning[]
-  preorder        Preorder?   @relation("PreorderOrder")
+  preorder          Preorder?          @relation("PreorderOrder")
+  dispute           Dispute?
 
   @@index([buyerId])
   @@index([sellerId])
@@ -448,17 +477,17 @@ model Order {
 }
 
 model OrderItem {
-  id          String   @id @default(uuid())
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  listingId   String?
-  listing     Listing? @relation(fields: [listingId], references: [id])
+  id            String       @id @default(uuid())
+  orderId       String
+  order         Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  listingId     String?
+  listing       Listing?     @relation(fields: [listingId], references: [id])
   networkPlanId String?
-  networkPlan NetworkPlan? @relation(fields: [networkPlanId], references: [id])
-  quantity    Int      @default(1)
-  unitPrice   Float
-  totalPrice  Float
-  createdAt   DateTime @default(now())
+  networkPlan   NetworkPlan? @relation(fields: [networkPlanId], references: [id])
+  quantity      Int          @default(1)
+  unitPrice     Float
+  totalPrice    Float
+  createdAt     DateTime     @default(now())
 
   @@index([orderId])
 }
@@ -475,12 +504,14 @@ model Escrow {
   seller          User         @relation("EscrowSeller", fields: [sellerId], references: [id])
   amount          Float
   status          EscrowStatus @default(HOLDING)
-  stripePaymentId String?      // Stripe PaymentIntent ID
+  stripePaymentId String? // Stripe PaymentIntent ID
   imeiVerified    Boolean      @default(false)
   simActivated    Boolean      @default(false)
   releasedAt      DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+
+  dispute Dispute?
 
   @@index([status])
 }
@@ -488,19 +519,19 @@ model Escrow {
 // ─── PREORDER ENGINE ────────────────────────────────────────────────────────
 
 model PreorderCampaign {
-  id              String    @id @default(uuid())
-  productId       String
-  product         Product   @relation(fields: [productId], references: [id])
-  title           String    // "iPhone 18 Pro — Launch Day Preorder"
-  description     String?
-  depositAmount   Float     // Required deposit to hold queue position
+  id                String    @id @default(uuid())
+  productId         String
+  product           Product   @relation(fields: [productId], references: [id])
+  title             String // "iPhone 18 Pro — Launch Day Preorder"
+  description       String?
+  depositAmount     Float // Required deposit to hold queue position
   estimatedShipDate DateTime?
-  maxSlots        Int?      // null = unlimited
-  slotsFilled     Int       @default(0)
-  isActive        Boolean   @default(true)
-  country         Country   @default(US)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  maxSlots          Int? // null = unlimited
+  slotsFilled       Int       @default(0)
+  isActive          Boolean   @default(true)
+  country           Country   @default(US)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   preorders Preorder[]
 
@@ -509,19 +540,19 @@ model PreorderCampaign {
 }
 
 model Preorder {
-  id                String         @id @default(uuid())
-  userId            String
-  user              User           @relation(fields: [userId], references: [id])
-  campaignId        String
-  campaign          PreorderCampaign @relation(fields: [campaignId], references: [id])
-  queuePosition     Int
-  status            PreorderStatus @default(QUEUE_OPEN)
-  depositPaid       Float          @default(0)
-  stripeDepositId   String?        // Stripe PaymentIntent for deposit
-  convertedOrderId  String?        @unique
-  convertedOrder    Order?         @relation("PreorderOrder", fields: [convertedOrderId], references: [id])
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id               String           @id @default(uuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  campaignId       String
+  campaign         PreorderCampaign @relation(fields: [campaignId], references: [id])
+  queuePosition    Int
+  status           PreorderStatus   @default(QUEUE_OPEN)
+  depositPaid      Float            @default(0)
+  stripeDepositId  String? // Stripe PaymentIntent for deposit
+  convertedOrderId String?          @unique
+  convertedOrder   Order?           @relation("PreorderOrder", fields: [convertedOrderId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   tradeIn TradeIn? @relation("PreorderTradeIn")
 
@@ -533,21 +564,21 @@ model Preorder {
 // ─── TRADE-IN (Lock-in value before launch) ─────────────────────────────────
 
 model TradeIn {
-  id              String        @id @default(uuid())
+  id              String           @id @default(uuid())
   userId          String
-  user            User          @relation(fields: [userId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
   productId       String
-  product         Product       @relation(fields: [productId], references: [id])
+  product         Product          @relation(fields: [productId], references: [id])
   deviceCondition ProductCondition
   imei            String?
-  quotedValue     Float         // Locked-in trade-in value
-  finalValue      Float?        // After inspection
-  status          TradeInStatus @default(QUOTE_GIVEN)
-  preorderId      String?       @unique
-  preorder        Preorder?     @relation("PreorderTradeIn", fields: [preorderId], references: [id])
-  lockedUntil     DateTime?     // How long the quote is valid
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  quotedValue     Float // Locked-in trade-in value
+  finalValue      Float? // After inspection
+  status          TradeInStatus    @default(QUOTE_GIVEN)
+  preorderId      String?          @unique
+  preorder        Preorder?        @relation("PreorderTradeIn", fields: [preorderId], references: [id])
+  lockedUntil     DateTime? // How long the quote is valid
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -556,13 +587,13 @@ model TradeIn {
 // ─── AI CHATBOT ─────────────────────────────────────────────────────────────
 
 model ChatSession {
-  id        String        @id @default(uuid())
-  userId    String?       // null = anonymous visitor
-  user      User?         @relation(fields: [userId], references: [id])
-  title     String?       // Auto-generated from first message
-  context   Json?         // { intent: "cross-border-plan", filters: {...} }
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id        String   @id @default(uuid())
+  userId    String? // null = anonymous visitor
+  user      User?    @relation(fields: [userId], references: [id])
+  title     String? // Auto-generated from first message
+  context   Json? // { intent: "cross-border-plan", filters: {...} }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   messages ChatMessage[]
 
@@ -570,13 +601,13 @@ model ChatSession {
 }
 
 model ChatMessage {
-  id          String      @id @default(uuid())
-  sessionId   String
-  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  role        ChatRole
-  content     String
-  metadata    Json?       // { suggestedProducts: [...], suggestedPlans: [...] }
-  createdAt   DateTime    @default(now())
+  id        String      @id @default(uuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      ChatRole
+  content   String
+  metadata  Json? // { suggestedProducts: [...], suggestedPlans: [...] }
+  createdAt DateTime    @default(now())
 
   @@index([sessionId])
 }
@@ -584,16 +615,16 @@ model ChatMessage {
 // ─── REVIEWS & RATINGS ──────────────────────────────────────────────────────
 
 model Review {
-  id         String   @id @default(uuid())
-  authorId   String
-  author     User     @relation("ReviewAuthor", fields: [authorId], references: [id])
-  targetId   String   // The user being reviewed (seller)
-  target     User     @relation("ReviewTarget", fields: [targetId], references: [id])
-  orderId    String?  // Optional link to the order
-  rating     Int      // 1-5
-  title      String?
-  comment    String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  targetId  String // The user being reviewed (seller)
+  target    User     @relation("ReviewTarget", fields: [targetId], references: [id])
+  orderId   String? // Optional link to the order
+  rating    Int // 1-5
+  title     String?
+  comment   String?
+  createdAt DateTime @default(now())
 
   @@index([authorId])
   @@index([targetId])
@@ -605,10 +636,10 @@ model Notification {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // "order_update", "preorder_ready", "trade_in_approved", "chat_reply", etc.
+  type      String // "order_update", "preorder_ready", "trade_in_approved", "chat_reply", etc.
   title     String
   body      String?
-  link      String?  // Deep link to relevant page
+  link      String? // Deep link to relevant page
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -619,13 +650,13 @@ model Notification {
 // ─── PLATFORM COMMISSION & ANALYTICS ────────────────────────────────────────
 
 model PlatformCommission {
-  id              String   @id @default(uuid())
-  orderId         String
-  commissionPct   Float    // e.g. 5.0 for 5%
+  id               String   @id @default(uuid())
+  orderId          String
+  commissionPct    Float // e.g. 5.0 for 5%
   commissionAmount Float
-  bountyFee       Float    @default(0) // Recurring fee from network providers
-  currency        String   @default("USD")
-  createdAt       DateTime @default(now())
+  bountyFee        Float    @default(0) // Recurring fee from network providers
+  currency         String   @default("USD")
+  createdAt        DateTime @default(now())
 
   @@index([orderId])
 }
@@ -633,20 +664,197 @@ model PlatformCommission {
 // ─── DASHBOARD ANALYTICS (materialized/cached) ─────────────────────────────
 
 model DashboardStats {
-  id              String   @id @default(uuid())
-  userId          String
-  role            UserRole
-  period          String   // "daily", "weekly", "monthly"
-  periodStart     DateTime
-  totalRevenue    Float    @default(0)
-  totalOrders     Int      @default(0)
-  totalPreorders  Int      @default(0)
-  activeListings  Int      @default(0)
-  avgRating       Float    @default(0)
-  topProducts     Json?    // [{ productId, name, count }]
-  computedAt      DateTime @default(now())
+  id             String   @id @default(uuid())
+  userId         String
+  role           UserRole
+  period         String // "daily", "weekly", "monthly"
+  periodStart    DateTime
+  totalRevenue   Float    @default(0)
+  totalOrders    Int      @default(0)
+  totalPreorders Int      @default(0)
+  activeListings Int      @default(0)
+  avgRating      Float    @default(0)
+  topProducts    Json? // [{ productId, name, count }]
+  computedAt     DateTime @default(now())
 
   @@unique([userId, period, periodStart])
   @@index([userId])
   @@index([role])
 }
+
+// ─── KYC VERIFICATION ───────────────────────────────────────────────────────
+
+model KycDocument {
+  id           String             @id @default(uuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentType KycDocumentType
+  documentUrl  String
+  status       VerificationStatus @default(PENDING)
+  notes        String?
+  uploadedAt   DateTime           @default(now())
+  reviewedAt   DateTime?
+  reviewedBy   String?
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── DISPUTE ENGINE ─────────────────────────────────────────────────────────
+
+model Dispute {
+  id          String        @id @default(uuid())
+  orderId     String?       @unique
+  order       Order?        @relation(fields: [orderId], references: [id])
+  escrowId    String?       @unique
+  escrow      Escrow?       @relation(fields: [escrowId], references: [id])
+  raisedById  String
+  raisedBy    User          @relation("DisputeRaiser", fields: [raisedById], references: [id])
+  defendingId String
+  defending   User          @relation("DisputeDefender", fields: [defendingId], references: [id])
+  status      DisputeStatus @default(OPEN)
+  reason      DisputeReason
+  description String
+  resolution  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  messages DisputeMessage[]
+
+  @@index([raisedById])
+  @@index([status])
+}
+
+model DisputeMessage {
+  id          String   @id @default(uuid())
+  disputeId   String
+  dispute     Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User     @relation(fields: [senderId], references: [id])
+  content     String
+  evidenceUrl String?
+  isAdminMsg  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([disputeId])
+}
+
+// ─── CMS & PLATFORM CONFIG ──────────────────────────────────────────────────
+
+model PlatformSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model TrackingConfig {
+  id         String   @id @default(uuid())
+  provider   String   @unique // "GOOGLE_ANALYTICS" or "MATOMO"
+  trackingId String
+  isActive   Boolean  @default(true)
+  metadata   Json?
+  updatedAt  DateTime @updatedAt
+}
+
+// ─── CMS: BANNER SLIDES ─────────────────────────────────────────────────────
+
+model BannerSlide {
+  id         String   @id @default(uuid())
+  title      String
+  subtitle   String?
+  ctaText    String?
+  ctaLink    String?
+  desktopImg String
+  mobileImg  String?
+  gradient   String?  // CSS gradient overlay class
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// ─── CMS: HOMEPAGE SECTIONS ─────────────────────────────────────────────────
+
+model HomepageSection {
+  id         String   @id @default(uuid())
+  sectionKey String   @unique // "stats_bar", "features", "how_it_works", "trust_signals", "cta"
+  title      String?
+  subtitle   String?
+  content    Json     // Array of section-specific items
+  isVisible  Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@index([sectionKey])
+}
+
+// ─── CMS: FOOTER ─────────────────────────────────────────────────────────────
+
+model FooterColumn {
+  id        String       @id @default(uuid())
+  heading   String
+  sortOrder Int          @default(0)
+  isVisible Boolean      @default(true)
+  links     FooterLink[]
+  updatedAt DateTime     @updatedAt
+}
+
+model FooterLink {
+  id        String       @id @default(uuid())
+  columnId  String
+  column    FooterColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  label     String
+  href      String
+  sortOrder Int          @default(0)
+  isVisible Boolean      @default(true)
+
+  @@index([columnId])
+}
+
+// ─── CMS: SEO METADATA ──────────────────────────────────────────────────────
+
+model SeoMeta {
+  id              String   @id @default(uuid())
+  pagePath        String   @unique // "/", "/about", "/preorder"
+  title           String
+  description     String?
+  ogTitle         String?
+  ogDescription   String?
+  ogImage         String?
+  canonicalUrl    String?
+  robotsDirective String?  // "index,follow", "noindex"
+  structuredData  Json?    // JSON-LD schema.org data
+  updatedAt       DateTime @updatedAt
+
+  @@index([pagePath])
+}
+
+// ─── ADMIN: DELETION QUEUE ──────────────────────────────────────────────────
+
+enum DeletionRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model DeletionRequest {
+  id           String                @id @default(uuid())
+  userId       String
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason       String?
+  status       DeletionRequestStatus @default(PENDING)
+  adminNotes   String?
+  processedAt  DateTime?
+  processedBy  String?               // Admin user ID
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+

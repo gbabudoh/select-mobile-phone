@@ -12,23 +12,47 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log("[AUTH] Missing email or password");
+            return null;
+          }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+          const email = credentials.email.trim();
+          const password = credentials.password;
 
-        if (!user) return null;
+          console.log(`[AUTH] Attempting login for: ${email}`);
 
-        const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) return null;
+          const user = await prisma.user.findUnique({
+            where: { email },
+          });
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
+          if (!user) {
+            console.log(`[AUTH] User not found in DB: ${email}`);
+            return null;
+          }
+
+          console.log(`[AUTH] User found: ${user.email}, Role: ${user.role}`);
+          console.log(`[AUTH] Comparing passwords...`);
+
+          const valid = await bcrypt.compare(password, user.password);
+          
+          if (!valid) {
+            console.log(`[AUTH] Password comparison failed for: ${email}`);
+            return null;
+          }
+
+          console.log(`[AUTH] Password match successful for: ${email}`);
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
+        } catch (err) {
+          console.error(`[AUTH] CRITICAL ERROR during authorize:`, err);
+          return null;
+        }
       },
     }),
   ],
@@ -36,14 +60,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as { role?: string }).role || "BUYER";
+        token.role = user.role || "BUYER";
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { id?: string }).id = token.id as string;
-        (session.user as { role?: string }).role = (token.role as string) || "BUYER";
+        session.user.id = token.id as string;
+        session.user.role = (token.role as string) || "BUYER";
       }
       return session;
     },
@@ -55,4 +79,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Required for Next.js 15+ App Router — trusts the Host header so
+  // internal session fetches from client components are not rejected.
+  trustHost: true,
 };

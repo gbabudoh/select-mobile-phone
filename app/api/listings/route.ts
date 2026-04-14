@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireVerifiedSeller } from "@/lib/access-control";
 
 // GET: Browse listings with filters
 export async function GET(req: NextRequest) {
@@ -59,6 +60,12 @@ export async function POST(req: NextRequest) {
 
     if (!sellerId || !productId || !title || !price || !condition) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // ENFORCE VERIFICATION GATE
+    const { error, message, status } = await requireVerifiedSeller(sellerId);
+    if (error) {
+      return NextResponse.json({ error, message }, { status });
     }
 
     const listing = await prisma.listing.create({

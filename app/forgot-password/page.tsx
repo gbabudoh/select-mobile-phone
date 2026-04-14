@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Navigation } from "../../components/Navigation";
 import { 
   Mail, 
   ArrowLeft,
@@ -51,7 +50,6 @@ export default function ForgotPasswordPage() {
   return (
     <main className="min-h-screen relative overflow-hidden bg-white text-slate-900">
       <div className="animated-bg" />
-      <Navigation />
 
       <div className="relative z-10 pt-40 pb-24 px-6 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-12rem)]">
         <motion.div
