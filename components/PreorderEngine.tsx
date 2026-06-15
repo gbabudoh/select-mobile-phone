@@ -300,19 +300,19 @@ export function PreorderEngine() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-sm font-semibold mb-4">
-            <Rocket className="w-4 h-4" /> Deposit-Based Queue — Lock Your Spot
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-xs sm:text-sm font-semibold mb-4 max-w-full">
+            <Rocket className="w-4 h-4 shrink-0" /> <span className="truncate">Deposit-Based Queue — Lock Your Spot</span>
           </div>
-          <h2 className="text-4xl md:text-6xl font-extrabold text-[#0f172a] tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-[#0f172a] tracking-tight mb-4">
             Reserve Your Device
           </h2>
-          <p className="text-lg text-[#0f172a]/60 max-w-3xl mx-auto mb-6">
+          <p className="text-base sm:text-lg text-[#0f172a]/60 max-w-3xl mx-auto mb-6 px-4">
             Reserve upcoming flagships before launch. Know exactly who you&apos;re buying from — wholesaler, retailer, or network provider — and which carriers you can bundle with.
           </p>
           {/* Urgency signal */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-sm font-bold">
-            <Users className="w-4 h-4" />
-            {totalSlotsLeft.toLocaleString()} spots remaining across {CAMPAIGNS.length} live campaigns
+          <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-xs sm:text-sm font-bold max-w-full">
+            <Users className="w-4 h-4 shrink-0" />
+            <span>{totalSlotsLeft.toLocaleString()} spots remaining across {CAMPAIGNS.length} live campaigns</span>
           </div>
         </motion.div>
 

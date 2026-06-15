@@ -22,7 +22,7 @@ export function TCOResults({ result, months }: Props) {
   const animKey = `${carrierTotal.toFixed(0)}-${byopTotal.toFixed(0)}`;
 
   return (
-    <div className="glass-panel p-8 md:p-10 rounded-[3rem] sticky top-32 overflow-hidden bg-white/40 border-white shadow-xl">
+    <div className="glass-panel p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] sticky top-32 overflow-hidden bg-white/40 border-white shadow-xl">
       {/* Glow orb */}
       <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#04a1c6]/5 rounded-full blur-[100px] pointer-events-none" />
 
@@ -103,7 +103,7 @@ export function TCOResults({ result, months }: Props) {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.5, type: "spring" }}
-        className={`mt-8 p-8 rounded-4xl text-center relative overflow-hidden transition-all duration-500 border ${
+        className={`mt-8 p-6 sm:p-8 rounded-[2rem] sm:rounded-4xl text-center relative overflow-hidden transition-all duration-500 border ${
           saved >= 0
             ? "bg-emerald-50 border-emerald-100"
             : "bg-rose-50 border-rose-100"
@@ -115,7 +115,7 @@ export function TCOResults({ result, months }: Props) {
           </p>
           <div className="flex items-center justify-center gap-2 mb-1">
             {saved >= 0 && <ShieldCheck className="w-6 h-6 text-emerald-500" />}
-            <p className={`text-5xl font-black ${saved >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+            <p className={`text-3xl sm:text-5xl font-black ${saved >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
               ${Math.abs(saved).toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </p>
           </div>

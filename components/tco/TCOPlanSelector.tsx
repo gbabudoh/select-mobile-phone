@@ -22,7 +22,7 @@ export function TCOPlanSelector({
   return (
     <div className="space-y-8">
       {/* Carrier slider */}
-      <div className="p-8 rounded-[2.5rem] bg-[#0f172a] text-white shadow-2xl relative overflow-hidden group">
+      <div className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#0f172a] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-32 h-32 bg-[#04a1c6]/20 blur-[80px] group-hover:bg-[#04a1c6]/30 transition-all" />
         <div className="relative z-10">
           <div className="flex justify-between items-end mb-6">

@@ -56,10 +56,10 @@ export function TCOCalculatorFull() {
             >
               <Calculator className="w-3 h-3" /> Cost Optimizer
             </motion.div>
-            <h1 className="text-5xl md:text-6xl font-black text-[#0f172a] tracking-tight leading-[0.9]">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#0f172a] tracking-tight leading-[0.9]">
               Total Cost of <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#04a1c6] to-indigo-600">Ownership</span>
             </h1>
-            <p className="text-[#0f172a]/40 text-lg font-medium max-w-xl">
+            <p className="text-[#0f172a]/40 text-base sm:text-lg font-medium max-w-xl">
               Uncover the hidden costs of carrier contracts. Compare the real long-term cost of Unlocked + BYOP versus standard retail financing.
             </p>
           </div>
@@ -80,7 +80,7 @@ export function TCOCalculatorFull() {
                   <button
                     key={m.value}
                     onClick={() => setMonths(m.value)}
-                    className={`relative px-6 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    className={`relative px-4 sm:px-6 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
                       months === m.value
                         ? "bg-white shadow-lg shadow-[#04a1c6]/10"
                         : "hover:bg-white/50"

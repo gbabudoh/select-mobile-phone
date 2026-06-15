@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Loader2,
-  User, LucideIcon, X, AlertTriangle
+  User, LucideIcon, X, AlertTriangle, Menu
 } from "lucide-react";
 import Image from "next/image";
 
@@ -25,6 +25,7 @@ export function DashboardShell({ children, navItems }: DashboardShellProps) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (status === "loading") {
     return (
@@ -35,16 +36,30 @@ export function DashboardShell({ children, navItems }: DashboardShellProps) {
   }
 
   const userRole = session?.user?.role?.replace(/_/g, " ") || "Member";
+  const activeItem = navItems.find((item) => pathname === item.href);
 
   return (
     <div className="min-h-screen flex bg-[#f8fafc] selection:bg-cyan-100 selection:text-cyan-900">
       <div className="animated-bg" />
       
+      {/* Backdrop for mobile */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-40 bg-black/45 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-72 fixed left-0 top-0 bottom-0 z-50 flex flex-col shrink-0 p-4 h-screen">
+      <aside className={`w-72 fixed left-0 top-0 bottom-0 z-50 flex flex-col shrink-0 p-4 h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="flex flex-col h-full glass-panel rounded-[2.5rem] shadow-xl overflow-hidden border-white/40">
-          <div className="p-8 pb-4">
-            <Link href="/" className="inline-block">
+          <div className="p-8 pb-4 flex items-center justify-between">
+            <Link href="/" className="inline-block" onClick={() => setSidebarOpen(false)}>
               <Image 
                 src="/logo.png" 
                 alt="Select Mobile" 
@@ -53,6 +68,13 @@ export function DashboardShell({ children, navItems }: DashboardShellProps) {
                 className="h-10 w-auto object-contain"
               />
             </Link>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-1.5 hover:bg-[#0f172a]/5 rounded-xl cursor-pointer text-[#0f172a] transition-colors"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto chat-scroll" aria-label="Dashboard navigation">
@@ -65,6 +87,7 @@ export function DashboardShell({ children, navItems }: DashboardShellProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setSidebarOpen(false)}
                   className={`group relative flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
                     isActive
                       ? "bg-[#0f172a] text-white shadow-lg shadow-[#0f172a]/20"
@@ -119,8 +142,27 @@ export function DashboardShell({ children, navItems }: DashboardShellProps) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-72 relative z-10 overflow-hidden flex flex-col min-h-screen">
-        <div className="flex-1 overflow-auto chat-scroll p-8 pt-12">
+      <main className="flex-1 lg:ml-72 ml-0 relative z-10 overflow-hidden flex flex-col min-h-screen">
+        {/* Mobile Dashboard Header */}
+        <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-30 flex items-center justify-between px-6 lg:hidden">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 -ml-2 rounded-xl hover:bg-slate-100 text-[#0f172a] cursor-pointer"
+              aria-label="Open menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <span className="text-sm font-black text-[#0f172a] uppercase tracking-wider">
+              {activeItem?.label || "Dashboard"}
+            </span>
+          </div>
+          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+            <User className="w-4 h-4 text-slate-500" />
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-auto chat-scroll p-4 pt-20 lg:p-8 lg:pt-12">
           <div className="max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

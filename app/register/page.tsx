@@ -169,7 +169,7 @@ export default function RegisterPage() {
                   >
                     {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
                   </div>
-                  <span className={`text-sm font-bold tracking-tight ${isActive ? "text-slate-900" : "text-slate-400"}`}>
+                  <span className={`text-xs sm:text-sm font-bold tracking-tight ${isActive ? "text-slate-900" : "text-slate-400"} hidden sm:inline`}>
                     {s.label}
                   </span>
                 </div>
@@ -212,16 +212,16 @@ export default function RegisterPage() {
                     whileHover={{ scale: 1.02, y: -8 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleRoleSelect(role.id)}
-                    className={`glass-panel glow-effect p-10 rounded-[3rem] border ${role.borderColor.replace('500/30', '500/20')} bg-white cursor-pointer group transition-all duration-500 flex flex-col items-center text-center shadow-sm hover:shadow-2xl hover:bg-[#04a1c6] hover:border-[#04a1c6]`}
+                    className={`glass-panel glow-effect p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border ${role.borderColor.replace('500/30', '500/20')} bg-white cursor-pointer group transition-all duration-500 flex flex-col items-center text-center shadow-sm hover:shadow-2xl hover:bg-[#04a1c6] hover:border-[#04a1c6]`}
                   >
-                    <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 mb-8 group-hover:scale-110 group-hover:bg-white/20 group-hover:border-white/30 transition-all duration-500 shadow-sm text-[#04a1c6] group-hover:text-white">
+                    <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-100 mb-4 sm:mb-8 group-hover:scale-110 group-hover:bg-white/20 group-hover:border-white/30 transition-all duration-500 shadow-sm text-[#04a1c6] group-hover:text-white">
                       {role.icon}
                     </div>
-                    <h3 className="text-3xl font-black mb-4 text-slate-900 transition-colors uppercase tracking-tight group-hover:text-white">{role.title}</h3>
-                    <p className="text-slate-500 leading-relaxed text-lg font-medium group-hover:text-white/90 transition-colors">
+                    <h3 className="text-xl sm:text-3xl font-black mb-2 sm:mb-4 text-slate-900 transition-colors uppercase tracking-tight group-hover:text-white">{role.title}</h3>
+                    <p className="text-sm sm:text-lg text-slate-500 leading-relaxed font-medium group-hover:text-white/90 transition-colors">
                       {role.description}
                     </p>
-                    <div className="mt-8 flex items-center gap-2 text-[#04a1c6] font-black uppercase tracking-widest text-xs translate-y-4 group-hover:translate-y-0 transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:text-white">
+                    <div className="mt-4 sm:mt-8 flex items-center gap-2 text-[#04a1c6] font-black uppercase tracking-widest text-xs translate-y-4 group-hover:translate-y-0 transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:text-white">
                       Get Started <ArrowRight className="w-4 h-4" />
                     </div>
                   </motion.div>
@@ -251,11 +251,11 @@ export default function RegisterPage() {
                 Change Role
               </button>
 
-              <div className="glass-panel p-12 rounded-[3.5rem] border border-black/5 relative overflow-hidden shadow-2xl bg-white/80">
+              <div className="glass-panel p-6 sm:p-12 rounded-[2rem] sm:rounded-[3.5rem] border border-black/5 relative overflow-hidden shadow-2xl bg-white/80">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#04a1c6]/5 rounded-full blur-[100px] -mr-32 -mt-32" />
                 
-                <div className="mb-12">
-                  <h2 className="text-4xl font-black mb-3 text-slate-900 tracking-tight">Set Up Profile</h2>
+                <div className="mb-8 sm:mb-12">
+                  <h2 className="text-2xl sm:text-4xl font-black mb-3 text-slate-900 tracking-tight">Set Up Profile</h2>
                   <div className="flex items-center gap-2 text-slate-500 font-medium">
                     <span>Creating as</span>
                     <span className="px-3 py-1 rounded-full bg-[#04a1c6]/10 border border-[#04a1c6]/20 text-[#04a1c6] text-xs font-black uppercase tracking-wider">
@@ -264,7 +264,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
                   {error && (
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -281,8 +281,8 @@ export default function RegisterPage() {
                   <div className="space-y-3">
                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Identity Information</label>
                     <div className="relative group">
-                      <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
-                        <UserIcon className="w-6 h-6" />
+                      <div className="absolute inset-y-0 left-4 sm:left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
+                        <UserIcon className="w-5 h-5 sm:w-6 h-6" />
                       </div>
                       <input 
                         type="text" 
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                         onChange={handleInputChange}
                         placeholder="Full Name or Business Entity"
                         required
-                        className="w-full bg-slate-50 border border-slate-100 rounded-3xl py-6 pl-16 pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-lg placeholder:text-slate-300 shadow-sm"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-3xl py-4 sm:py-6 pl-12 sm:pl-16 pr-4 sm:pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-base sm:text-lg placeholder:text-slate-300 shadow-sm"
                       />
                     </div>
                   </div>
@@ -299,8 +299,8 @@ export default function RegisterPage() {
                   <div className="space-y-3">
                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Communication</label>
                     <div className="relative group">
-                      <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
-                        <Mail className="w-6 h-6" />
+                      <div className="absolute inset-y-0 left-4 sm:left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
+                        <Mail className="w-5 h-5 sm:w-6 h-6" />
                       </div>
                       <input 
                         type="email" 
@@ -309,7 +309,7 @@ export default function RegisterPage() {
                         onChange={handleInputChange}
                         placeholder="email@example.com"
                         required
-                        className="w-full bg-slate-50 border border-slate-100 rounded-3xl py-6 pl-16 pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-lg placeholder:text-slate-300 shadow-sm"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-3xl py-4 sm:py-6 pl-12 sm:pl-16 pr-4 sm:pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-base sm:text-lg placeholder:text-slate-300 shadow-sm"
                       />
                     </div>
                   </div>
@@ -317,8 +317,8 @@ export default function RegisterPage() {
                   <div className="space-y-3">
                     <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Security</label>
                     <div className="relative group">
-                      <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
-                        <Lock className="w-6 h-6" />
+                      <div className="absolute inset-y-0 left-4 sm:left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
+                        <Lock className="w-5 h-5 sm:w-6 h-6" />
                       </div>
                       <input 
                         type="password" 
@@ -328,7 +328,7 @@ export default function RegisterPage() {
                         placeholder="Secure Password"
                         required
                         minLength={8}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-3xl py-6 pl-16 pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-lg placeholder:text-slate-300 shadow-sm"
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-3xl py-4 sm:py-6 pl-12 sm:pl-16 pr-4 sm:pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-base sm:text-lg placeholder:text-slate-300 shadow-sm"
                       />
                     </div>
                   </div>
@@ -337,7 +337,7 @@ export default function RegisterPage() {
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-[#04a1c6] to-[#0284a5] text-white font-black py-6 rounded-3xl shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer uppercase tracking-widest"
+                    className="w-full bg-gradient-to-r from-[#04a1c6] to-[#0284a5] text-white font-black py-4 sm:py-6 rounded-2xl sm:rounded-3xl shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer uppercase tracking-widest text-sm sm:text-base"
                   >
                     {loading ? (
                       <div className="flex items-center gap-3">

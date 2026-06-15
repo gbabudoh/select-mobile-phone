@@ -108,7 +108,7 @@ export default function AskSelmaPage() {
               >
                 <Cpu className="w-3 h-3" /> Select Mobile AI
               </motion.div>
-              <h1 className="text-5xl md:text-7xl font-black text-[#0f172a] mb-6 tracking-tight leading-[0.9]">
+              <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-[#0f172a] mb-6 tracking-tight leading-[0.9]">
                 Meet <span className="text-transparent bg-clip-text bg-linear-to-r from-[#04a1c6] to-indigo-600">SELMA</span>
               </h1>
               <p className="text-lg text-[#0f172a]/40 max-w-2xl mx-auto font-medium leading-relaxed">

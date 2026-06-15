@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { 
   ChevronLeft, ShieldCheck, CreditCard, 
   ArrowRight, CheckCircle2, ShoppingBag, MapPin, 
-  Mail, Phone, User, Info
+  Mail, Phone, User, Info, Loader2
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,6 +16,14 @@ export default function CheckoutPage() {
   const { cart, cartTotal, clearCart } = useCart();
   const { data: session } = useSession();
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment, 3: Success
+  const [loading, setLoading] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripePaymentId, setStripePaymentId] = useState<string | null>(null);
+  const [taxAmount, setTaxAmount] = useState(0);
+  const [shippingAmount, setShippingAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(cartTotal);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -47,16 +55,107 @@ export default function CheckoutPage() {
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step < 2) {
-      handleNext();
-    } else {
-      // Simulate order placement
-      setTimeout(() => {
-        clearCart();
-        setStep(3);
-      }, 1500);
+    if (step === 1) {
+      setLoading(true);
+      try {
+        // Simple mapping of zip to country
+        const isCanada = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(formData.zip.trim());
+        const shipCountry = isCanada ? "CA" : "US";
+        const shipState = isCanada ? "ON" : "NY"; // Default fallback states
+
+        // Resolve seller email from cart items
+        const sellerEmail = cart[0]?.sellerType === "Network Provider" ? "network@demo.com" 
+                           : cart[0]?.sellerType === "Retailer" ? "retail@demo.com"
+                           : cart[0]?.sellerType === "Individual" ? "individual@demo.com"
+                           : "wholesale@demo.com";
+
+        // Create the order in PENDING_PAYMENT state
+        const orderRes = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            buyerId: session?.user?.email || "buyer@demo.com",
+            sellerId: sellerEmail,
+            items: cart.map((item) => ({
+              listingId: item.category !== "ESIM_PLAN" ? item.id : undefined,
+              networkPlanId: item.category === "ESIM_PLAN" ? item.id : undefined,
+              quantity: item.quantity,
+            })),
+            shippingAddress: {
+              line1: formData.address,
+              line2: "",
+              city: formData.city,
+              state: shipState,
+              postalCode: formData.zip,
+              country: shipCountry,
+            },
+          }),
+        });
+
+        const orderData = await orderRes.json();
+        if (orderData.error) {
+          alert(`Order Creation Failed: ${orderData.error}`);
+          setLoading(false);
+          return;
+        }
+
+        const createdOrder = orderData.order;
+        setOrderId(createdOrder.id);
+        setTaxAmount(createdOrder.tax);
+        setShippingAmount(createdOrder.shippingCost);
+        setTotalAmount(createdOrder.totalAmount);
+
+        // Fetch Payment Intent client secret
+        const intentRes = await fetch("/api/checkout/create-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: createdOrder.id }),
+        });
+
+        const intentData = await intentRes.json();
+        if (intentData.error) {
+          alert(`Escrow Initialization Failed: ${intentData.error}`);
+          setLoading(false);
+          return;
+        }
+
+        setClientSecret(intentData.clientSecret);
+        setStripePaymentId(intentData.paymentIntentId);
+        
+        handleNext();
+      } catch (err) {
+        console.error("Order setup failed:", err);
+        alert("An error occurred during checkout initialization.");
+      } finally {
+        setLoading(false);
+      }
+    } else if (step === 2) {
+      setLoading(true);
+      try {
+        // In production, Stripe elements confirmCardPayment(clientSecret) would be called here.
+        // In sandbox, we use a 1.5s simulation timer and call the webhook simulation route.
+        setTimeout(async () => {
+          if (stripePaymentId && stripePaymentId.startsWith("pi_mock_")) {
+            await fetch("/api/webhooks/stripe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                eventType: "payment_intent.amount_capturable_updated",
+                paymentIntentId: stripePaymentId,
+              }),
+            });
+          }
+          
+          clearCart();
+          setStep(3);
+          setLoading(false);
+        }, 1500);
+      } catch (err) {
+        console.error("Payment authorization failed:", err);
+        setLoading(false);
+      }
     }
   };
 
@@ -285,13 +384,25 @@ export default function CheckoutPage() {
                       type="button"
                       onClick={handleBack}
                       className="px-8 py-4 rounded-2xl border border-gray-100 text-[#0f172a] font-black hover:bg-gray-50 transition-all cursor-pointer"
+                      disabled={loading}
                     >
                       Back
                     </button>
                   )}
-                  <button className="flex-1 px-8 py-4 rounded-2xl bg-[#0f172a] text-white font-black hover:bg-[#04a1c6] transition-all flex items-center justify-center gap-3 shadow-xl shadow-[#0f172a]/10 cursor-pointer">
-                    {step === 1 ? "Proceed to Payment" : "Verify & Secure Order"}
-                    <ArrowRight className="w-5 h-5" />
+                  <button 
+                    disabled={loading}
+                    className="flex-1 px-8 py-4 rounded-2xl bg-[#0f172a] text-white font-black hover:bg-[#04a1c6] transition-all flex items-center justify-center gap-3 shadow-xl shadow-[#0f172a]/10 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" /> Processing...
+                      </>
+                    ) : (
+                      <>
+                        {step === 1 ? "Proceed to Payment" : "Verify & Secure Order"}
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -327,17 +438,17 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between text-sm font-bold text-emerald-600 tracking-wider uppercase text-[10px]">
                     <span>Shipping</span>
-                    <span>FREE</span>
+                    <span>{shippingAmount === 0 ? "FREE" : `$${shippingAmount.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between text-sm font-bold text-[#0f172a]/60 tracking-wider uppercase text-[10px]">
                     <span>Tax (Est.)</span>
-                    <span className="text-[#0f172a]">$0.00</span>
+                    <span className="text-[#0f172a]">{taxAmount > 0 ? `$${taxAmount.toFixed(2)}` : "$0.00"}</span>
                   </div>
                   
                   <div className="pt-6 border-t border-gray-100 flex justify-between items-end">
                     <div>
                       <span className="text-xs font-black text-[#0f172a]/40 uppercase tracking-[0.2em] block mb-1">Total Due</span>
-                      <span className="text-4xl font-black text-[#0f172a]">${cartTotal.toLocaleString()}</span>
+                      <span className="text-4xl font-black text-[#0f172a]">${totalAmount.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

@@ -87,22 +87,22 @@ export default function LoginPage() {
             Back to Home
           </Link>
 
-          <div className="glass-panel p-12 rounded-[3.5rem] border border-black/5 relative overflow-hidden shadow-2xl bg-white/80">
+          <div className="glass-panel p-6 sm:p-12 rounded-[2rem] sm:rounded-[3.5rem] border border-black/5 relative overflow-hidden shadow-2xl bg-white/80">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#04a1c6]/5 rounded-full blur-[100px] -mr-32 -mt-32" />
             
-            <div className="mb-12">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-4 rounded-3xl bg-[#04a1c6]/10 border border-[#04a1c6]/20 text-[#04a1c6]">
-                  <LogIn className="w-8 h-8" />
+            <div className="mb-8 sm:mb-12">
+              <div className="flex items-center gap-3 sm:gap-4 mb-6">
+                <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-[#04a1c6]/10 border border-[#04a1c6]/20 text-[#04a1c6]">
+                  <LogIn className="w-6 h-6 sm:w-8 h-8" />
                 </div>
                 <div>
-                  <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Welcome Back</h2>
-                  <p className="text-slate-500 font-medium">Log in to your SelectMobile account</p>
+                  <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">Welcome Back</h2>
+                  <p className="text-sm sm:text-base text-slate-500 font-medium">Log in to your SelectMobile account</p>
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
               {error && (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -119,8 +119,8 @@ export default function LoginPage() {
               <div className="space-y-3">
                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Email Address</label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
-                    <Mail className="w-6 h-6" />
+                  <div className="absolute inset-y-0 left-4 sm:left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
+                    <Mail className="w-5 h-5 sm:w-6 h-6" />
                   </div>
                   <input 
                     type="email" 
@@ -129,7 +129,7 @@ export default function LoginPage() {
                     onChange={handleInputChange}
                     placeholder="email@example.com"
                     required
-                    className="w-full bg-slate-50 border border-slate-100 rounded-3xl py-6 pl-16 pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-lg placeholder:text-slate-300 shadow-sm"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-3xl py-4 sm:py-6 pl-12 sm:pl-16 pr-4 sm:pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-base sm:text-lg placeholder:text-slate-300 shadow-sm"
                   />
                 </div>
               </div>
@@ -142,8 +142,8 @@ export default function LoginPage() {
                   </Link>
                 </div>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
-                    <Lock className="w-6 h-6" />
+                  <div className="absolute inset-y-0 left-4 sm:left-6 flex items-center pointer-events-none transition-colors group-focus-within:text-[#04a1c6] text-slate-300">
+                    <Lock className="w-5 h-5 sm:w-6 h-6" />
                   </div>
                   <input 
                     type="password" 
@@ -152,7 +152,7 @@ export default function LoginPage() {
                     onChange={handleInputChange}
                     placeholder="Secure Password"
                     required
-                    className="w-full bg-slate-50 border border-slate-100 rounded-3xl py-6 pl-16 pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-lg placeholder:text-slate-300 shadow-sm"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-3xl py-4 sm:py-6 pl-12 sm:pl-16 pr-4 sm:pr-6 focus:outline-none focus:border-[#04a1c6] focus:bg-white transition-all duration-300 text-base sm:text-lg placeholder:text-slate-300 shadow-sm"
                   />
                 </div>
               </div>
@@ -162,7 +162,7 @@ export default function LoginPage() {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#04a1c6] to-[#0284a5] text-white font-black py-6 rounded-3xl shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer uppercase tracking-widest"
+                  className="w-full bg-gradient-to-r from-[#04a1c6] to-[#0284a5] text-white font-black py-4 sm:py-6 rounded-2xl sm:rounded-3xl shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 cursor-pointer uppercase tracking-widest text-sm sm:text-base"
                 >
                   {loading ? (
                     <div className="flex items-center gap-3">

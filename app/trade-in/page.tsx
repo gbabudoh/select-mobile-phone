@@ -190,13 +190,13 @@ export default function TradeInPage() {
 
           {/* ── Header ── */}
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-sm font-semibold mb-4">
-              <ArrowLeftRight className="w-4 h-4" /> Trade-In Program
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-xs sm:text-sm font-semibold mb-4 max-w-full">
+              <ArrowLeftRight className="w-4 h-4 shrink-0" /> <span className="truncate">Trade-In Program</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-[#0f172a] mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0f172a] mb-4">
               Get top value for your current device
             </h1>
-            <p className="text-lg text-[#0f172a]/60 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-[#0f172a]/60 max-w-2xl mx-auto px-4">
               Get an instant quote, lock in the value for up to 90 days, and apply it
               toward your next purchase or preorder. No surprises, no depreciation traps.
             </p>
@@ -233,7 +233,7 @@ export default function TradeInPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="flex flex-wrap justify-center gap-4 mb-14"
+            className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 md:gap-4 mb-14 max-w-md md:max-w-none mx-auto px-4"
           >
             {[
               { icon: <Package className="w-4 h-4" />,    text: "12,000+ devices traded in" },
@@ -242,9 +242,9 @@ export default function TradeInPage() {
               { icon: <ShieldCheck className="w-4 h-4" />, text: "Escrow-protected transaction" },
               { icon: <Star className="w-4 h-4" />,       text: "4.8★ average seller rating" },
             ].map((badge) => (
-              <div key={badge.text} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-100 text-sm text-[#0f172a]/70 shadow-sm">
+              <div key={badge.text} className="flex items-center justify-center md:justify-start gap-2 px-4 py-2 rounded-xl bg-white border border-gray-100 text-xs sm:text-sm text-[#0f172a]/70 shadow-sm last:col-span-2 max-w-full">
                 <span className="text-[#04a1c6]">{badge.icon}</span>
-                {badge.text}
+                <span>{badge.text}</span>
               </div>
             ))}
           </motion.div>

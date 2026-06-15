@@ -34,7 +34,7 @@ export function TCOTeaser() {
         {/* Left */}
         <div className="flex-1 space-y-8">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Total Cost of Ownership</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Total Cost of Ownership</h2>
             <p className="text-foreground/70">
               Buying outright with an MVNO eSIM often crushes the 24-month carrier
               contract trap. Pick a device to see a quick preview.

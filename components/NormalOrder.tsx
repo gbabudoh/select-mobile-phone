@@ -115,13 +115,13 @@ export function NormalOrder() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-sm font-semibold mb-4">
-            <Truck className="w-4 h-4" /> In-Stock — 2-Day Shipping across US &amp; Canada
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-xs sm:text-sm font-semibold mb-4 max-w-full">
+            <Truck className="w-4 h-4 shrink-0" /> <span className="truncate">In-Stock — 2-Day Shipping across US &amp; Canada</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#0f172a] tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0f172a] tracking-tight mb-4">
             Shop Phones
           </h2>
-          <p className="text-lg text-[#0f172a]/60 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-[#0f172a]/60 max-w-2xl mx-auto px-4">
             Select-Verified handsets, accessories, and eSIM plans. Every device passes a 50-point diagnostic. Escrow-protected checkout.
           </p>
         </motion.div>
@@ -132,7 +132,7 @@ export function NormalOrder() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex flex-wrap justify-center gap-4 mb-10"
+          className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 md:gap-4 mb-10 max-w-sm md:max-w-none mx-auto px-4"
         >
           {[
             { icon: <ShieldCheck className="w-4 h-4" />, text: "50-Point Verified" },
@@ -140,9 +140,9 @@ export function NormalOrder() {
             { icon: <Zap className="w-4 h-4" />, text: "Instant eSIM" },
             { icon: <BadgeCheck className="w-4 h-4" />, text: "Escrow Protected" },
           ].map((badge) => (
-            <div key={badge.text} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-100 text-sm text-[#0f172a]/70 shadow-sm">
+            <div key={badge.text} className="flex items-center justify-center md:justify-start gap-2 px-4 py-2 rounded-xl bg-white border border-gray-100 text-xs sm:text-sm text-[#0f172a]/70 shadow-sm">
               <span className="text-[#04a1c6]">{badge.icon}</span>
-              {badge.text}
+              <span>{badge.text}</span>
             </div>
           ))}
         </motion.div>

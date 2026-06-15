@@ -62,22 +62,17 @@ export function HeroBanner() {
         }}
         navigation={true}
         modules={[Pagination, Navigation]}
-        className="w-full h-[40vh] md:h-[50vh] lg:h-[60vh] min-h-[350px] rounded-3xl overflow-hidden shadow-2xl"
+        className="w-full h-[250px] sm:h-[300px] md:h-[50vh] lg:h-[60vh] rounded-3xl overflow-hidden shadow-2xl"
       >
         {SLIDES.map((slide) => (
           <SwiperSlide
             key={slide.id}
             className="relative w-full h-full overflow-hidden"
           >
-            {/* Desktop Image */}
+            {/* Landscape Background Image (Used for all devices to keep horizontal layout and prevent squishing) */}
             <div
-              className="hidden md:block absolute inset-0 bg-cover bg-center transition-transform duration-10000 hover:scale-105"
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-10000 hover:scale-105"
               style={{ backgroundImage: `url(${slide.desktopImg})` }}
-            />
-            {/* Mobile Image */}
-            <div
-              className="block md:hidden absolute inset-0 bg-cover bg-center transition-transform duration-10000 hover:scale-105"
-              style={{ backgroundImage: `url(${slide.mobileImg})` }}
             />
 
             {/* Gradient Overlay */}
@@ -92,21 +87,21 @@ export function HeroBanner() {
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut", staggerChildren: 0.2 }}
-                  className="max-w-2xl"
+                  className="max-w-2xl animate-fade-in"
                 >
-                  <motion.h2 
+                  <motion.h2
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/60 tracking-tight mb-6 leading-tight drop-shadow-2xl"
+                    className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/60 tracking-tight mb-3 md:mb-6 leading-tight drop-shadow-2xl"
                   >
                     {slide.title}
                   </motion.h2>
-                  <motion.p 
+                  <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.4 }}
-                    className="text-xl md:text-3xl text-white/90 mb-10 font-light tracking-wide drop-shadow-md"
+                    className="text-xs sm:text-sm md:text-xl lg:text-3xl text-white/90 mb-5 md:mb-10 font-light tracking-wide drop-shadow-md"
                   >
                     {slide.subtitle}
                   </motion.p>
@@ -117,7 +112,7 @@ export function HeroBanner() {
                       whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(4,161,198,0.8)" }}
                       whileTap={{ scale: 0.95 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
-                      className="inline-block px-10 py-4 rounded-full bg-[#04a1c6] text-white font-bold text-lg transition-all shadow-[0_0_20px_rgba(4,161,198,0.4)] backdrop-blur-md border border-[#04a1c6]/50 cursor-pointer"
+                      className="inline-block px-5 py-2.5 sm:px-8 sm:py-3.5 md:px-10 md:py-4 rounded-full bg-[#04a1c6] text-white font-bold text-xs sm:text-sm md:text-lg transition-all shadow-[0_0_20px_rgba(4,161,198,0.4)] backdrop-blur-md border border-[#04a1c6]/50 cursor-pointer"
                     >
                       {slide.cta}
                     </motion.span>
@@ -155,6 +150,18 @@ export function HeroBanner() {
         .group:hover .swiper-button-next,
         .group:hover .swiper-button-prev {
           opacity: 1;
+        }
+        @media (max-width: 768px) {
+          .swiper-button-next,
+          .swiper-button-prev {
+            width: 32px !important;
+            height: 32px !important;
+            opacity: 0.85 !important;
+          }
+          .swiper-button-next:after,
+          .swiper-button-prev:after {
+            font-size: 12px !important;
+          }
         }
       `}</style>
     </div>

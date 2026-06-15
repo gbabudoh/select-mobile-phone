@@ -132,3 +132,10 @@ body {
   0% { transform: scale(1); }
   100% { transform: scale(1.15); }
 }
+
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 76px;
+  }
+}
+
