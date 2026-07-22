@@ -41,8 +41,8 @@ export default function ProductPage() {
   const images = useMemo(() => {
     if (!product) return [];
     if (product.images && product.images.length > 0) return product.images;
-    if (product.colors && product.colors.some(c => c.image)) {
-      return product.colors.map(c => c.image || product.image);
+    if (product.colors && product.colors.some((c: { image?: string }) => c.image)) {
+      return product.colors.map((c: { image?: string }) => c.image || product.image);
     }
     return [product.image];
   }, [product]);
@@ -191,7 +191,7 @@ export default function ProductPage() {
             {/* Thumbnail Navigation */}
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-1">
-                {images.map((img, idx) => (
+                {images.map((img: string, idx: number) => (
                   <button 
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
@@ -251,7 +251,7 @@ export default function ProductPage() {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {product.colors.map((color, idx) => {
+                    {product.colors.map((color: { name: string; hex: string; image?: string }, idx: number) => {
                       const isSelected = selectedColor === idx;
                       const isLightColor = ["#f5f5f5", "#f0ede8", "#f5f0e8", "#f5f0e0", "#c0c0c0", "#a8c5b8"].includes(color.hex);
                       return (
@@ -438,7 +438,7 @@ export default function ProductPage() {
                 {product.specs ? Object.entries(product.specs).map(([key, value], idx) => (
                   <div key={key} className={`flex items-center justify-between p-4 rounded-xl ${idx % 2 === 0 ? "bg-white/60 border border-white/80" : ""}`}>
                     <span className="text-xs font-bold text-[#0f172a]/50 uppercase tracking-wider">{key}</span>
-                    <span className="text-xs font-black text-[#0f172a]">{value}</span>
+                    <span className="text-xs font-black text-[#0f172a]">{String(value)}</span>
                   </div>
                 )) : (
                   <div className="p-10 text-center glass-panel rounded-2xl text-gray-400 italic text-sm">
