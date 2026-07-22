@@ -127,10 +127,10 @@ export default function TradeInPage() {
   const { data: session } = useSession();
 
   // Form state
-  const [brand, setBrand]               = useState("Apple");
-  const [selectedDevice, setSelectedDevice] = useState("iPhone 16 Pro Max");
-  const [storage, setStorage]           = useState("256 GB");
-  const [condition, setCondition]       = useState("Good");
+  const [brand, setBrand]               = useState("");
+  const [selectedDevice, setSelectedDevice] = useState("");
+  const [storage, setStorage]           = useState("");
+  const [condition, setCondition]       = useState("");
   const [carrier, setCarrier]           = useState("unlocked");
   const [imei, setImei]                 = useState("");
 
@@ -163,10 +163,10 @@ export default function TradeInPage() {
     "/buyer/dashboard";
 
   function reset() {
-    setBrand("Apple");
-    setSelectedDevice("iPhone 16 Pro Max");
-    setStorage("256 GB");
-    setCondition("Good");
+    setBrand("");
+    setSelectedDevice("");
+    setStorage("");
+    setCondition("");
     setCarrier("unlocked");
     setImei("");
     setLocked(false);

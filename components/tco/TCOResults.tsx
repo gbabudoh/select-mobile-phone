@@ -6,11 +6,12 @@ import Link from "next/link";
 import type { TCOResult } from "../../lib/tco";
 
 interface Props {
-  result: TCOResult;
+  result: TCOResult | null;
   months: number;
 }
 
 export function TCOResults({ result, months }: Props) {
+  if (!result) return null;
   const { carrierTotal, byopTotal, saved, monthlySavings, carrierBreakdown, byopBreakdown } = result;
   const barRatio = carrierTotal > 0 ? (byopTotal / carrierTotal) * 100 : 0;
 

@@ -7,7 +7,7 @@ import type { Product } from "../../lib/products";
 
 interface Props {
   phones: Product[];
-  selected: Product;
+  selected: Product | undefined;
   onSelect: (phone: Product) => void;
 }
 
@@ -24,7 +24,7 @@ export function TCOPhoneSelector({ phones, selected, onSelect }: Props) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {phones.map((phone) => {
-          const isActive = selected.id === phone.id;
+          const isActive = selected?.id === phone.id;
           return (
             <motion.button
               whileHover={{ scale: 1.02, translateY: -2 }}

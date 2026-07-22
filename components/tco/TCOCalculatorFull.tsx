@@ -5,6 +5,7 @@ import { TCOPhoneSelector } from "./TCOPhoneSelector";
 import { TCOPlanSelector } from "./TCOPlanSelector";
 import { TCOResults } from "./TCOResults";
 import { calculateTCO, getHandsets, getEsimPlans } from "../../lib/tco";
+import type { Product } from "../../lib/products";
 import { Calculator, Clock, BarChart3, ChevronDown, ShieldCheck, Zap, ArrowRight, DollarSign } from "lucide-react";
 
 const MONTH_OPTIONS = [
@@ -17,8 +18,8 @@ export function TCOCalculatorFull() {
   const handsets = useMemo(() => getHandsets(), []);
   const plans = useMemo(() => getEsimPlans(), []);
 
-  const [selectedPhone, setSelectedPhone] = useState(handsets[0]);
-  const [selectedPlan, setSelectedPlan] = useState(plans[0]);
+  const [selectedPhone, setSelectedPhone] = useState<Product | undefined>(handsets[0]);
+  const [selectedPlan, setSelectedPlan] = useState<Product | undefined>(plans[0]);
   const [carrierPrice, setCarrierPrice] = useState(85);
   const [months, setMonths] = useState(24);
   const [activationFee, setActivationFee] = useState(35);
@@ -27,14 +28,16 @@ export function TCOCalculatorFull() {
 
   const result = useMemo(
     () =>
-      calculateTCO({
-        devicePrice: selectedPhone.price,
-        carrierPlanMonthly: carrierPrice,
-        byopPlanMonthly: selectedPlan.price,
-        months,
-        carrierActivationFee: activationFee,
-        insuranceMonthly: insurance,
-      }),
+      selectedPhone && selectedPlan
+        ? calculateTCO({
+            devicePrice: selectedPhone.price,
+            carrierPlanMonthly: carrierPrice,
+            byopPlanMonthly: selectedPlan.price,
+            months,
+            carrierActivationFee: activationFee,
+            insuranceMonthly: insurance,
+          })
+        : null,
     [selectedPhone, selectedPlan, carrierPrice, months, activationFee, insurance]
   );
 
@@ -130,7 +133,7 @@ export function TCOCalculatorFull() {
           <div className="p-6 rounded-[2.5rem] bg-white border border-slate-200/80 shadow-sm">
             <TCOPlanSelector
               plans={plans}
-              selected={selectedPlan}
+              selected={selectedPlan ?? null}
               onSelect={setSelectedPlan}
               carrierPrice={carrierPrice}
               onCarrierPriceChange={setCarrierPrice}
@@ -211,7 +214,19 @@ export function TCOCalculatorFull() {
 
         {/* Right Results Column (Sticky Panel) */}
         <div className="lg:w-[420px] xl:w-[460px] w-full shrink-0">
-          <TCOResults result={result} months={months} />
+          {result ? (
+            <TCOResults result={result} months={months} />
+          ) : (
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200/80 shadow-sm text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto">
+                <BarChart3 className="w-6 h-6 text-slate-300" />
+              </div>
+              <h3 className="text-sm font-black text-[#0f172a]">No Products Available</h3>
+              <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                TCO results will appear here once handsets and eSIM plans are listed on the platform.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
