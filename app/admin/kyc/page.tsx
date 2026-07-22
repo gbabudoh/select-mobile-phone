@@ -13,39 +13,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- Mock KYC Queue Data ---
-const MOCK_KYC = [
-  { 
-    id: "KYC-942", 
-    userId: "USR-003", 
-    userName: "Ahmed Hassan", 
-    type: "PASSPORT", 
-    country: "US", 
-    submitted: "2 hours ago", 
-    status: "PENDING", 
-    docUrl: "https://example.com/passport_preview.jpg" 
-  },
-  { 
-    id: "KYC-881", 
-    userId: "USR-005", 
-    userName: "Elena Rodriguez", 
-    type: "BUSINESS_INCORPORATION", 
-    country: "US", 
-    submitted: "5 hours ago", 
-    status: "REJECTED", 
-    docUrl: "https://example.com/inc_preview.jpg" 
-  },
-  { 
-    id: "KYC-721", 
-    userId: "USR-009", 
-    userName: "Javier Garcia", 
-    type: "SSN", 
-    country: "CA", 
-    submitted: "1 day ago", 
-    status: "PENDING", 
-    docUrl: "https://example.com/ssn_preview.jpg" 
-  },
-];
+// --- KYC Queue Data ---
+const MOCK_KYC: any[] = [];
 
 export default function AdminKycPage() {
   const [selectedKyc, setSelectedKyc] = useState<typeof MOCK_KYC[0] | null>(null);

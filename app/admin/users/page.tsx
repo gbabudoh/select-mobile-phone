@@ -14,14 +14,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// --- Mock Data for UI Structure ---
-const MOCK_USERS = [
-  { id: "USR-001", name: "Marcus Chen", email: "marcus@techdistro.com", role: "WHOLESALER", status: "Active", verification: "Verified", country: "CA", joined: "Oct 12, 2025" },
-  { id: "USR-002", name: "Sarah Jenkins", email: "sarah@mobilecity.ca", role: "RETAILER", status: "Active", verification: "Verified", country: "CA", joined: "Oct 15, 2025" },
-  { id: "USR-003", name: "Ahmed Hassan", email: "ahmed@globalcomm.net", role: "NETWORK_PROVIDER", status: "Pending", verification: "Pending", country: "US", joined: "Oct 24, 2025" },
-  { id: "USR-004", name: "Kevin O'Brien", email: "kevin@wirelesshub.com", role: "INDIVIDUAL_SELLER", status: "Active", verification: "Verified", country: "US", joined: "Nov 02, 2025" },
-  { id: "USR-005", name: "Elena Rodriguez", email: "elena@cellpro.com", role: "RETAILER", status: "Suspended", verification: "Rejected", country: "US", joined: "Nov 10, 2025" },
-];
+// --- Users Data ---
+const MOCK_USERS: any[] = [];
 
 const roleConfig: Record<string, { color: string; bg: string }> = {
   WHOLESALER: { color: "text-blue-700", bg: "bg-blue-50" },
