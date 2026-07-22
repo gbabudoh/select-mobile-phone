@@ -6,16 +6,25 @@ import {
   ArrowLeft, Save, Check,
   Warehouse, Tag, Package, Zap,
   Lock, Clock, AlertTriangle,
-  Settings2, LucideIcon
+  Settings2, CreditCard, CheckCircle2, X, LucideIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function WholesalerSettingsPage() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "success" | "error" }[]>([]);
+  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "success" | "error" | "info" }[]>([]);
 
-  const addToast = (msg: string, type: "success" | "error" = "success") => {
+  // Stripe State
+  const [stripeConnected, setStripeConnected] = useState(true);
+  const [stripeAccountId, setStripeAccountId] = useState("acct_1N9x82K91888");
+  const [bankName, setBankName] = useState("CHASE BUSINESS CHECKING");
+  const [bankLast4, setBankLast4] = useState("9904");
+  const [settlementFreq, setSettlementFreq] = useState<"Instant" | "Daily" | "Weekly">("Daily");
+  const [minPayout, setMinPayout] = useState("$500.00");
+  const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
+
+  const addToast = (msg: string, type: "success" | "error" | "info" = "success") => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, msg, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
@@ -23,6 +32,7 @@ export default function WholesalerSettingsPage() {
 
   const SECTIONS = [
     { id: "business", title: "Business Profile", desc: "Legal Entity, Tax IDs & Company Info", icon: Building2, bgColor: "bg-blue-50/50", textColor: "text-blue-600" },
+    { id: "payout", title: "Stripe Express Payouts", desc: "Managed B2B Stripe Connect & Bank Routing", icon: CreditCard, bgColor: "bg-indigo-50/50", textColor: "text-indigo-600" },
     { id: "warehouse", title: "Warehouse & Locations", desc: "Physical Infrastructure & Capacity", icon: Warehouse, bgColor: "bg-orange-50/50", textColor: "text-orange-600" },
     { id: "pricing", title: "Pricing & Tiers", desc: "Wholesale Markups & Volume Discounts", icon: Tag, bgColor: "bg-emerald-50/50", textColor: "text-emerald-600" },
     { id: "logistics", title: "Logistics & Shipping", desc: "Carriers, Zones & Freight Rules", icon: Truck, bgColor: "bg-rose-50/50", textColor: "text-rose-600" },
@@ -36,13 +46,125 @@ export default function WholesalerSettingsPage() {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      addToast("Settings updated successfully!");
-    }, 1200);
+      addToast("Wholesale settings updated successfully!");
+    }, 1000);
+  };
+
+  const handleStripeToggle = () => {
+    if (stripeConnected) {
+      setStripeConnected(false);
+      addToast("Stripe Express Account Disconnected", "info");
+    } else {
+      setStripeConnected(true);
+      addToast("Stripe Express Account Connected & Verified!", "success");
+    }
   };
 
   const renderContent = () => {
     switch (activeSection) {
       case "business": return <BusinessProfileForm />;
+      case "payout": return (
+        <div className="space-y-12">
+          <SectionHeader title="Stripe Express B2B Direct Deposit" subtitle="Stripe Express manages your wholesale settlements securely, transferring funds directly to your verified commercial checking account." />
+          
+          <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white shadow-2xl space-y-6 border border-white/10 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-white/10 text-white backdrop-blur-md">
+                  <CreditCard className="w-6 h-6 text-indigo-400" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300 block">B2B Settlement Engine</span>
+                  <h4 className="text-xl font-black">Stripe Express Connect</h4>
+                </div>
+              </div>
+
+              {stripeConnected ? (
+                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black border border-emerald-500/30 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Connected &amp; Verified
+                </span>
+              ) : (
+                <span className="px-3.5 py-1.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/30">
+                  Disconnected
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Wholesale Account ID</span>
+                <p className="text-sm font-mono font-bold text-white">{stripeAccountId}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payout Destination Bank</span>
+                <p className="text-sm font-bold text-white">{bankName} (•••• {bankLast4})</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setIsStripeModalOpen(true)}
+                className="px-6 py-3 rounded-xl bg-white text-slate-900 font-black text-xs uppercase tracking-wider hover:bg-slate-100 cursor-pointer flex items-center gap-2"
+              >
+                <Settings2 className="w-4 h-4 text-indigo-600" /> Manage Stripe Express
+              </button>
+
+              <button
+                type="button"
+                onClick={handleStripeToggle}
+                className="px-6 py-3 rounded-xl bg-white/10 text-white font-bold text-xs uppercase tracking-wider hover:bg-white/20 cursor-pointer border border-white/10"
+              >
+                {stripeConnected ? "Disconnect Stripe" : "Re-Connect Stripe Express"}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-slate-50/50 border border-[#dcdcdc] p-8 rounded-[2.5rem] space-y-6">
+            <div>
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-3">Settlement Frequency</label>
+              <div className="grid grid-cols-3 gap-3">
+                {(["Instant", "Daily", "Weekly"] as const).map((freq) => (
+                  <button
+                    key={freq}
+                    type="button"
+                    onClick={() => {
+                      setSettlementFreq(freq);
+                      addToast(`Stripe settlement frequency set to ${freq}`, "info");
+                    }}
+                    className={`py-4 px-6 rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer border ${
+                      settlementFreq === freq
+                        ? "bg-[#0f172a] text-white border-[#0f172a] shadow-lg shadow-slate-900/20 scale-[1.02]"
+                        : "bg-white text-slate-600 border-[#dcdcdc] hover:border-slate-400"
+                    }`}
+                  >
+                    {freq}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-[#dcdcdc]/50">
+              <div>
+                <p className="font-extrabold text-sm text-[#0f172a]">Minimum Wholesale Payout</p>
+                <p className="text-xs text-slate-400 font-medium">Minimum threshold required to trigger B2B bank deposit</p>
+              </div>
+              <select
+                value={minPayout}
+                onChange={(e) => {
+                  setMinPayout(e.target.value);
+                  addToast(`Minimum payout threshold set to ${e.target.value}`, "info");
+                }}
+                className="px-4 py-3 rounded-2xl border border-[#dcdcdc] text-xs font-black bg-white focus:outline-none text-[#0f172a]"
+              >
+                <option value="$100.00">$100.00</option>
+                <option value="$500.00">$500.00</option>
+                <option value="$1,000.00">$1,000.00</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      );
       case "warehouse": return <WarehouseForm />;
       case "pricing": return <PricingTiersForm />;
       case "logistics": return <LogisticsForm />;
@@ -55,7 +177,7 @@ export default function WholesalerSettingsPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-2 sm:px-6 py-10 antialiased font-sans">
+    <div className="max-w-6xl mx-auto px-2 sm:px-6 py-10 antialiased font-sans relative">
       {/* Toast System */}
       <div className="fixed top-8 right-8 z-[100] flex flex-col gap-4">
         <AnimatePresence>
@@ -66,10 +188,16 @@ export default function WholesalerSettingsPage() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
               className={`px-5 py-4 rounded-2xl shadow-xl backdrop-blur-3xl border flex items-center gap-4 min-w-[300px] ${
-                toast.type === "success" ? "bg-white/90 border-emerald-100 text-emerald-700" : "bg-white/90 border-rose-100 text-rose-700"
+                toast.type === "error" ? "bg-white/90 border-rose-100 text-rose-700" :
+                toast.type === "info" ? "bg-white/90 border-blue-100 text-blue-700" :
+                "bg-white/90 border-emerald-100 text-emerald-700"
               }`}
             >
-              <div className={`p-2 rounded-xl ${toast.type === "success" ? "bg-emerald-50 text-emerald-500" : "bg-rose-50 text-rose-500"}`}>
+              <div className={`p-2 rounded-xl ${
+                toast.type === "error" ? "bg-rose-50 text-rose-500" :
+                toast.type === "info" ? "bg-blue-50 text-blue-500" :
+                "bg-emerald-50 text-emerald-500"
+              }`}>
                 <Check className="w-4 h-4" />
               </div>
               <div>
@@ -101,11 +229,11 @@ export default function WholesalerSettingsPage() {
                 Wholesale <span className="text-blue-500">Settings</span>
               </h1>
               <p className="text-slate-500 font-bold text-sm max-w-2xl leading-relaxed uppercase tracking-wide">
-                Configure your distribution infrastructure, pricing logic, and partner network from a centralized dashboard.
+                Configure your distribution infrastructure, Stripe Express payouts, and partner network from a centralized dashboard.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 pb-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-20">
               {SECTIONS.map((section, idx) => (
                 <motion.button
                   key={section.id}
@@ -125,8 +253,6 @@ export default function WholesalerSettingsPage() {
                     <span className="text-[10px] font-black uppercase tracking-widest">Configure</span>
                     <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
                   </div>
-
-                  <div className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full ${section.bgColor} opacity-0 group-hover:opacity-20 transition-opacity duration-1000 blur-3xl`} />
                 </motion.button>
               ))}
             </div>
@@ -181,6 +307,88 @@ export default function WholesalerSettingsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Stripe Express Manage Modal ── */}
+      <AnimatePresence>
+        {isStripeModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            onClick={() => setIsStripeModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] max-w-lg w-full p-7 md:p-9 shadow-2xl relative border border-white/50 space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-[#0f172a]">Stripe Express B2B Payouts</h3>
+                    <p className="text-xs text-slate-500 font-medium">Commercial Bank Account Configuration</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsStripeModalOpen(false)} className="p-2 rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-1">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Stripe Account ID</span>
+                  <p className="text-sm font-mono font-bold text-slate-900">{stripeAccountId}</p>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Commercial Bank Name</label>
+                  <input
+                    type="text"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Account Last 4 Digits</label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={bankLast4}
+                    onChange={(e) => setBankLast4(e.target.value.replace(/\D/g, ""))}
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setIsStripeModalOpen(false);
+                      addToast("Wholesale Stripe Express Bank Details Saved!", "success");
+                    }}
+                    className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-wider hover:bg-indigo-700 transition-all cursor-pointer shadow-lg shadow-indigo-500/20"
+                  >
+                    Save Commercial Payout Bank
+                  </button>
+                  <button
+                    onClick={handleStripeToggle}
+                    className="w-full py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors cursor-pointer"
+                  >
+                    {stripeConnected ? "Disconnect Stripe Account" : "Re-Connect Stripe Express"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -226,8 +434,6 @@ function ToggleSwitch({ label, defaultChecked = false }: { label: string; defaul
     </div>
   );
 }
-
-// --- FORM MODULES ---
 
 function BusinessProfileForm() {
   return (
