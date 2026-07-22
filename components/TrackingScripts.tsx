@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 interface TrackingConfig {
   id: string;
@@ -18,9 +19,9 @@ export function TrackingScripts() {
   useEffect(() => {
     // Only fetch on client
     fetch("/api/admin/tracking")
-      .then(res => res.json())
+      .then(res => safeFetchJson(res))
       .then(data => {
-        if (data.configs) {
+        if (data?.configs) {
           setConfigs(data.configs.filter((c: TrackingConfig) => c.isActive));
         }
       })

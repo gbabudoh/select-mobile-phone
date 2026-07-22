@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 interface Admin {
   id: string;
@@ -30,8 +31,8 @@ export default function AdminTeamPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/admins");
-      if (res.ok) {
-        const data = await res.json();
+      const data = await safeFetchJson(res);
+      if (res.ok && data?.admins) {
         setAdmins(data.admins);
       }
     } catch (err) {
@@ -56,7 +57,7 @@ export default function AdminTeamPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newAdmin),
       });
-      const data = await res.json();
+      const data = await safeFetchJson(res);
       if (res.ok) {
         setSuccess("Admin created successfully!");
         setNewAdmin({ name: "", email: "", password: "" });
@@ -66,7 +67,7 @@ export default function AdminTeamPage() {
           fetchAdmins();
         }, 1500);
       } else {
-        setError(data.error || "Failed to create admin");
+        setError(data?.error || "Failed to create admin");
       }
     } catch (err) {
       setError("An unexpected error occurred");

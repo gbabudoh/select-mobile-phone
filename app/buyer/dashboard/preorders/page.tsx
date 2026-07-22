@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Zap, Loader2, Rocket, ArrowLeftRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 interface PreorderItem {
   id: string;
@@ -46,8 +47,8 @@ export default function PreordersPage() {
       try {
         const res = await fetch("/api/preorders?mode=my");
         if (!res.ok) throw new Error("Failed to load preorders");
-        const data = await res.json();
-        setPreorders(data.preorders || []);
+        const data = await safeFetchJson(res);
+        setPreorders(data?.preorders || []);
       } catch (err: any) {
         setError(err.message);
       } finally {

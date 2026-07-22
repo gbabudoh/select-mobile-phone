@@ -10,6 +10,7 @@ import {
   SendHorizontal
 } from "lucide-react";
 import Link from "next/link";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -29,10 +30,10 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const data = await safeFetchJson(res);
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to process request");
+        throw new Error(data?.error || "Failed to process request");
       }
 
       setSubmitted(true);

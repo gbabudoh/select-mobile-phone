@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Settings, Trash2, UserX, ShieldCheck, TriangleAlert, CircleCheck, CircleX, Clock, Globe, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 interface DeletionRequest {
   id: string;
@@ -46,8 +47,8 @@ export default function AdminSettingsPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/settings");
-      const data = await res.json();
-      if (data.requests) setRequests(data.requests);
+      const data = await safeFetchJson(res);
+      if (data?.requests) setRequests(data.requests);
     } catch (err) {
       console.error("Failed to load requests");
     } finally {

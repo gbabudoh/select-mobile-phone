@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { DollarSign, ShoppingCart, ArrowUpRight, ArrowDownRight, Download, Filter, TrendingUp, ShieldCheck, Clock, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 const STATUSES = ["ALL", "COMPLETED", "PAYMENT_HELD", "PROCESSING", "SHIPPED", "DISPUTED", "REFUNDED"] as const;
 
@@ -61,9 +62,9 @@ export default function AdminPaymentsPage() {
       params.append("period", period);
       
       const res = await fetch(`/api/admin/payments?${params.toString()}`);
-      const data = await res.json();
-      if (data.transactions) setTransactions(data.transactions);
-      if (data.overview) setOverview(data.overview);
+      const data = await safeFetchJson(res);
+      if (data?.transactions) setTransactions(data.transactions);
+      if (data?.overview) setOverview(data.overview);
     } catch (err) {
       console.error("Failed to fetch payments");
     } finally {

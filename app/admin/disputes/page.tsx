@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { ShieldAlert, MessageSquare, DollarSign, Clock, AlertCircle, CheckCircle, XCircle, Send, ArrowRight, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 const STATUSES = ["ALL", "OPEN", "UNDER_REVIEW", "RESOLVED_REFUND", "RESOLVED_RELEASE", "CLOSED"] as const;
 
@@ -54,8 +55,8 @@ export default function AdminDisputesPage() {
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       
       const res = await fetch(`/api/admin/disputes?${params.toString()}`);
-      const data = await res.json();
-      if (data.disputes) setDisputes(data.disputes);
+      const data = await safeFetchJson(res);
+      if (data?.disputes) setDisputes(data.disputes);
     } catch (err) {
       console.error("Failed to fetch disputes");
     } finally {

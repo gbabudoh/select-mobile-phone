@@ -14,6 +14,8 @@ import {
   Mail,
   Lock
 } from "lucide-react";
+import Link from "next/link";
+import { safeFetchJson } from "@/lib/safe-fetch";
 import { useRouter } from "next/navigation";
 
 type Step = "ROLE_SELECTION" | "ACCOUNT_DETAILS" | "SUCCESS";
@@ -111,10 +113,10 @@ export default function RegisterPage() {
         body: JSON.stringify({ ...formData, role: selectedRole }),
       });
 
-      const data = await res.json();
+      const data = await safeFetchJson(res);
 
       if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
+        throw new Error(data?.error || "Something went wrong");
       }
 
       setDirection(1);

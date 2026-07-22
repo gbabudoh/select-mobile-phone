@@ -1,10 +1,11 @@
 "use client";
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeftRight, ChevronRight, Lock, Zap, ShieldCheck,
   CheckCircle, AlertCircle, Truck, Clock, CreditCard,
-  Wifi, WifiOff, Package, Star
+  Wifi, WifiOff, Package, Star, Smartphone, RefreshCw,
+  Check, ArrowRight, DollarSign, Award, Sparkles
 } from "lucide-react";
 import { Navigation } from "../../components/Navigation";
 import Link from "next/link";
@@ -14,12 +15,12 @@ import { useSession } from "next-auth/react";
 
 const BRANDS = ["Apple", "Samsung", "Google", "OnePlus", "Nothing", "Motorola"];
 
-const DEVICES_BY_BRAND: Record<string, { name: string; base: number }[]> = {
+const DEVICES_BY_BRAND: Record<string, { name: string; base: number; tag?: string }[]> = {
   Apple: [
-    { name: "iPhone 17 Pro Max", base: 680 },
+    { name: "iPhone 17 Pro Max", base: 680, tag: "Popular" },
     { name: "iPhone 17 Pro",     base: 580 },
     { name: "iPhone 17",         base: 420 },
-    { name: "iPhone 16 Pro Max", base: 520 },
+    { name: "iPhone 16 Pro Max", base: 520, tag: "High Value" },
     { name: "iPhone 16 Pro",     base: 440 },
     { name: "iPhone 16",         base: 320 },
     { name: "iPhone 15 Pro Max", base: 380 },
@@ -29,18 +30,18 @@ const DEVICES_BY_BRAND: Record<string, { name: string; base: number }[]> = {
     { name: "iPhone 14 Pro",     base: 210 },
   ],
   Samsung: [
-    { name: "Galaxy S26 Ultra",  base: 560 },
+    { name: "Galaxy S26 Ultra",  base: 560, tag: "Popular" },
     { name: "Galaxy S25 Ultra",  base: 430 },
     { name: "Galaxy S25+",       base: 340 },
     { name: "Galaxy S25",        base: 280 },
     { name: "Galaxy S24 Ultra",  base: 360 },
     { name: "Galaxy S24+",       base: 280 },
     { name: "Galaxy S24",        base: 220 },
-    { name: "Galaxy Z Fold 6",   base: 520 },
+    { name: "Galaxy Z Fold 6",   base: 520, tag: "Foldable" },
     { name: "Galaxy Z Flip 6",   base: 300 },
   ],
   Google: [
-    { name: "Pixel 10 Pro XL", base: 400 },
+    { name: "Pixel 10 Pro XL", base: 400, tag: "Popular" },
     { name: "Pixel 10 Pro",    base: 340 },
     { name: "Pixel 10",        base: 260 },
     { name: "Pixel 9 Pro XL",  base: 310 },
@@ -50,27 +51,27 @@ const DEVICES_BY_BRAND: Record<string, { name: string; base: number }[]> = {
     { name: "Pixel 8",         base: 160 },
   ],
   OnePlus: [
-    { name: "OnePlus 13",  base: 280 },
+    { name: "OnePlus 13",  base: 280, tag: "Popular" },
     { name: "OnePlus 12",  base: 200 },
     { name: "OnePlus 12R", base: 150 },
   ],
   Nothing: [
-    { name: "Nothing Phone (3)",  base: 260 },
+    { name: "Nothing Phone (3)",  base: 260, tag: "Popular" },
     { name: "Nothing Phone (2a)", base: 150 },
     { name: "Nothing Phone (2)",  base: 180 },
   ],
   Motorola: [
     { name: "Moto Edge 50 Ultra", base: 220 },
     { name: "Moto Edge 50 Pro",   base: 170 },
-    { name: "Razr+ 2025",         base: 280 },
+    { name: "Razr+ 2025",         base: 280, tag: "Foldable" },
   ],
 };
 
 const STORAGE_OPTIONS = [
-  { label: "128 GB", multiplier: 1.00 },
-  { label: "256 GB", multiplier: 1.10 },
-  { label: "512 GB", multiplier: 1.22 },
-  { label: "1 TB",   multiplier: 1.38 },
+  { label: "128 GB", multiplier: 1.00, bonus: "Base" },
+  { label: "256 GB", multiplier: 1.10, bonus: "+10%" },
+  { label: "512 GB", multiplier: 1.22, bonus: "+22%" },
+  { label: "1 TB",   multiplier: 1.38, bonus: "+38%" },
 ];
 
 const CONDITIONS = [
@@ -78,65 +79,65 @@ const CONDITIONS = [
     label: "Like New",
     key: "USED_LIKE_NEW",
     multiplier: 1.0,
-    desc: "No visible scratches. May have original packaging.",
+    desc: "Flawless screen & body. 100% working order.",
     color: "text-emerald-600",
-    bg: "bg-emerald-50 border-emerald-300",
+    badgeBg: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    bg: "bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-400/20",
   },
   {
     label: "Good",
     key: "USED_GOOD",
     multiplier: 0.80,
-    desc: "Minor wear or light scratches. Fully functional.",
+    desc: "Minor micro-scratches. Fully functional.",
     color: "text-[#04a1c6]",
-    bg: "bg-[#04a1c6]/5 border-[#04a1c6]/40",
+    badgeBg: "bg-cyan-100 text-cyan-800 border-cyan-200",
+    bg: "bg-cyan-50/80 border-cyan-300 ring-2 ring-cyan-400/20",
   },
   {
     label: "Fair",
     key: "USED_FAIR",
     multiplier: 0.60,
-    desc: "Visible scuffs or dents. No cracks. Fully functional.",
+    desc: "Visible scuffs or housing dents. No screen cracks.",
     color: "text-amber-600",
-    bg: "bg-amber-50 border-amber-300",
+    badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+    bg: "bg-amber-50/80 border-amber-300 ring-2 ring-amber-400/20",
   },
   {
     label: "Poor",
     key: "USED_POOR",
     multiplier: 0.38,
-    desc: "Cracked screen or heavy wear. Still powers on.",
+    desc: "Cracked glass or heavy wear. Device powers on.",
     color: "text-rose-600",
-    bg: "bg-rose-50 border-rose-300",
+    badgeBg: "bg-rose-100 text-rose-800 border-rose-200",
+    bg: "bg-rose-50/80 border-rose-300 ring-2 ring-rose-400/20",
   },
 ];
 
 const CARRIER_OPTIONS = [
-  { label: "Unlocked",      key: "unlocked",  multiplier: 1.00, desc: "Works with any carrier",        icon: <Wifi className="w-4 h-4" /> },
-  { label: "Carrier Locked", key: "locked",   multiplier: 0.85, desc: "Locked to a specific carrier",  icon: <WifiOff className="w-4 h-4" /> },
+  { label: "Factory Unlocked", key: "unlocked", multiplier: 1.00, desc: "Compatible with any US & CA carrier", icon: <Wifi className="w-4 h-4 text-emerald-500" /> },
+  { label: "Carrier Locked",    key: "locked",   multiplier: 0.85, desc: "Locked to AT&T, T-Mobile, Verizon, or Rogers", icon: <WifiOff className="w-4 h-4 text-amber-500" /> },
 ];
-
-// ─── IMEI validation ──────────────────────────────────────────────────────────
 
 function imeiStatus(val: string): "empty" | "valid" | "invalid" {
   if (!val) return "empty";
   return /^\d{15}$/.test(val) ? "valid" : "invalid";
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function TradeInPage() {
   const { data: session } = useSession();
 
   // Form state
-  const [brand, setBrand]               = useState("");
-  const [selectedDevice, setSelectedDevice] = useState("");
-  const [storage, setStorage]           = useState("");
-  const [condition, setCondition]       = useState("");
-  const [carrier, setCarrier]           = useState("");
+  const [brand, setBrand]               = useState("Apple");
+  const [selectedDevice, setSelectedDevice] = useState("iPhone 16 Pro Max");
+  const [storage, setStorage]           = useState("256 GB");
+  const [condition, setCondition]       = useState("Good");
+  const [carrier, setCarrier]           = useState("unlocked");
   const [imei, setImei]                 = useState("");
 
   // UI state
   const [loading, setLoading]   = useState(false);
-  const [locked, setLocked]     = useState(false);  // committed (Lock In Value)
-  const [quoted, setQuoted]     = useState(false);  // just-get-quote shown
+  const [locked, setLocked]     = useState(false);
+  const [quoted, setQuoted]     = useState(false);
 
   const devices = brand ? DEVICES_BY_BRAND[brand] : [];
   const device  = devices.find((d) => d.name === selectedDevice);
@@ -162,523 +163,485 @@ export default function TradeInPage() {
     "/buyer/dashboard";
 
   function reset() {
-    setBrand(""); setSelectedDevice(""); setStorage("");
-    setCondition(""); setCarrier(""); setImei("");
-    setLocked(false); setQuoted(false);
+    setBrand("Apple");
+    setSelectedDevice("iPhone 16 Pro Max");
+    setStorage("256 GB");
+    setCondition("Good");
+    setCarrier("unlocked");
+    setImei("");
+    setLocked(false);
+    setQuoted(false);
   }
 
   async function handleLock() {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1600)); // simulate API
+    await new Promise((r) => setTimeout(r, 1400));
     setLoading(false);
     setLocked(true);
   }
 
   function handleJustQuote() {
     setQuoted(true);
-    // scroll to quote panel smoothly
-    document.getElementById("quote-panel")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    document.getElementById("valuation-panel")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen pb-24">
       <div className="animated-bg" />
       <Navigation />
 
-      <section className="pt-28 pb-20 px-6 max-w-5xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+      <section className="pt-24 md:pt-28 px-6 max-w-7xl mx-auto space-y-12">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
 
-          {/* ── Header ── */}
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04a1c6]/10 text-[#04a1c6] text-xs sm:text-sm font-semibold mb-4 max-w-full">
-              <ArrowLeftRight className="w-4 h-4 shrink-0" /> <span className="truncate">Trade-In Program</span>
+          {/* ── Hero Header ── */}
+          <div className="relative rounded-[3rem] p-8 md:p-12 overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white shadow-2xl border border-white/10 mb-12">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#04a1c6]/20 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 blur-[100px] pointer-events-none" />
+
+            <div className="relative z-10 max-w-3xl space-y-5">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-black uppercase tracking-widest text-[#04a1c6]">
+                <ArrowLeftRight className="w-4 h-4 text-[#04a1c6]" />
+                <span>Instant Trade-In Valuation Engine</span>
+              </div>
+
+              <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
+                Unlock Max Value for Your Current Device
+              </h1>
+
+              <p className="text-base md:text-lg text-slate-300 font-medium leading-relaxed max-w-2xl">
+                Get an instant fair-market quote, lock in your payout for up to 90 days, and apply credit toward any smartphone or preorder on Select Mobile.
+              </p>
+
+              {/* Trust Badges */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                {[
+                  { icon: <Lock className="w-4 h-4 text-amber-400" />, text: "90-Day Price Lock Guarantee" },
+                  { icon: <Truck className="w-4 h-4 text-emerald-400" />, text: "Free Prepaid Courier Label" },
+                  { icon: <ShieldCheck className="w-4 h-4 text-[#04a1c6]" />, text: "Escrow Protected Payout" },
+                  { icon: <Zap className="w-4 h-4 text-purple-400" />, text: "Credit Applied in 3 Days" },
+                ].map((badge) => (
+                  <div key={badge.text} className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-bold text-slate-200">
+                    {badge.icon}
+                    <span>{badge.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0f172a] mb-4">
-              Get top value for your current device
-            </h1>
-            <p className="text-base sm:text-lg text-[#0f172a]/60 max-w-2xl mx-auto px-4">
-              Get an instant quote, lock in the value for up to 90 days, and apply it
-              toward your next purchase or preorder. No surprises, no depreciation traps.
-            </p>
           </div>
 
-          {/* ── How It Works ── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {/* ── Workflow Steps ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             {[
-              { step: "01", icon: <ArrowLeftRight className="w-5 h-5" />, title: "Select Your Device", desc: "Pick your model, storage, and condition. We calculate a fair market quote instantly." },
-              { step: "02", icon: <Lock className="w-5 h-5" />, title: "Lock Your Value", desc: "Lock in the quoted price for 90 days. Your device won't lose value while you decide." },
-              { step: "03", icon: <Zap className="w-5 h-5" />, title: "Apply to Purchase", desc: "Use your locked value as credit toward any order or preorder on Select Mobile." },
-            ].map((item, i) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="glass-panel rounded-2xl p-6 border border-white/10"
-              >
-                <span className="text-xs font-bold text-[#04a1c6]/50">{item.step}</span>
-                <div className="flex items-center gap-3 mt-2 mb-3">
-                  <div className="p-2 bg-[#04a1c6]/10 rounded-xl text-[#04a1c6]">{item.icon}</div>
-                  <h3 className="font-bold text-[#0f172a]">{item.title}</h3>
+              { step: "01", icon: <Smartphone className="w-5 h-5 text-[#04a1c6]" />, title: "Select Device", desc: "Choose your model, storage size, and condition rating." },
+              { step: "02", icon: <Sparkles className="w-5 h-5 text-amber-500" />, title: "Get Instant Quote", desc: "Live market algorithm calculates highest value offer." },
+              { step: "03", icon: <Lock className="w-5 h-5 text-emerald-500" />, title: "Lock Rate (90 Days)", desc: "Freeze your payout rate so device value never depreciates." },
+              { step: "04", icon: <CreditCard className="w-5 h-5 text-purple-500" />, title: "Ship & Receive Payout", desc: "Ship with our prepaid label and get instant store credit." },
+            ].map((item) => (
+              <div key={item.step} className="relative bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm group hover:shadow-xl hover:border-[#04a1c6]/30 transition-all">
+                <span className="text-4xl font-black text-slate-200 absolute top-5 right-5 group-hover:text-[#04a1c6]/20 transition-colors">{item.step}</span>
+                <div className="relative z-10">
+                  <div className="p-3 rounded-2xl bg-slate-50 w-fit mb-4 border border-slate-100">{item.icon}</div>
+                  <h3 className="font-extrabold text-[#0f172a] text-base mb-1">{item.title}</h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
                 </div>
-                <p className="text-sm text-[#0f172a]/60 leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* ── Trust Signals ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 md:gap-4 mb-14 max-w-md md:max-w-none mx-auto px-4"
-          >
-            {[
-              { icon: <Package className="w-4 h-4" />,    text: "12,000+ devices traded in" },
-              { icon: <Truck className="w-4 h-4" />,      text: "Free prepaid shipping label" },
-              { icon: <Clock className="w-4 h-4" />,      text: "Credit applied in 3–5 days" },
-              { icon: <ShieldCheck className="w-4 h-4" />, text: "Escrow-protected transaction" },
-              { icon: <Star className="w-4 h-4" />,       text: "4.8★ average seller rating" },
-            ].map((badge) => (
-              <div key={badge.text} className="flex items-center justify-center md:justify-start gap-2 px-4 py-2 rounded-xl bg-white border border-gray-100 text-xs sm:text-sm text-[#0f172a]/70 shadow-sm last:col-span-2 max-w-full">
-                <span className="text-[#04a1c6]">{badge.icon}</span>
-                <span>{badge.text}</span>
               </div>
             ))}
-          </motion.div>
+          </div>
 
-          {/* ── Form / Success ── */}
+          {/* ── Main Interactive Form / Success Panel ── */}
           <AnimatePresence mode="wait">
             {locked ? (
-              /* ── Success State ── */
+              /* ── Locked Success Screen ── */
               <motion.div
                 key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="glass-panel rounded-3xl p-10 md:p-14 border border-white/10 text-center"
+                className="bg-white rounded-[3rem] p-8 md:p-14 border border-slate-200/80 text-center shadow-2xl relative overflow-hidden"
               >
-                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-                  <ShieldCheck className="w-8 h-8 text-emerald-600" />
+                <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20">
+                  <ShieldCheck className="w-10 h-10" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#0f172a] mb-2">Quote Locked In</h2>
-                <p className="text-[#0f172a]/60 mb-1">
-                  Your <span className="font-semibold">{selectedDevice}</span> ({storage} · {condition}) is valued at{" "}
-                  <span className="font-bold text-[#04a1c6] text-xl">${baseValue}</span> for the next 90 days.
+                
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black uppercase tracking-widest border border-emerald-200 mb-4">
+                  <Lock className="w-3.5 h-3.5" /> 90-Day Payout Locked
+                </div>
+
+                <h2 className="text-3xl md:text-4xl font-black text-[#0f172a] mb-3">
+                  ${baseValue} Trade-In Value Guaranteed!
+                </h2>
+
+                <p className="text-base text-slate-600 max-w-xl mx-auto mb-8 font-medium">
+                  Your <strong className="text-[#0f172a] font-black">{selectedDevice}</strong> ({storage} · {condition} · {carrier === "unlocked" ? "Unlocked" : "Carrier Locked"}) is reserved at <span className="text-[#04a1c6] font-black">${baseValue}</span> until launch day.
                 </p>
 
-                {/* Conditional sign-in message — only for guests */}
-                {!session?.user && (
-                  <p className="text-sm text-[#0f172a]/40 mt-2 mb-6">
-                    Sign in to track your trade-in and apply it toward a purchase.
-                  </p>
-                )}
-
-                {/* What happens next */}
-                <div className="mt-8 mb-10 text-left max-w-md mx-auto">
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#0f172a]/30 mb-4 text-center">What happens next</p>
-                  <div className="space-y-4">
-                    {[
-                      { icon: <Truck className="w-4 h-4 text-[#04a1c6]" />,      title: "Prepaid label emailed", desc: "We'll send a free shipping label within 1 business day." },
-                      { icon: <Package className="w-4 h-4 text-amber-500" />,    title: "Ship within 30 days",   desc: "Drop your device at any carrier location — no box needed." },
-                      { icon: <ShieldCheck className="w-4 h-4 text-emerald-500" />, title: "We inspect & confirm", desc: "Our team verifies your device within 3–5 business days." },
-                      { icon: <CreditCard className="w-4 h-4 text-indigo-500" />, title: "Credit applied",       desc: "Value is added to your account for any order or preorder." },
-                    ].map((step) => (
-                      <div key={step.title} className="flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-gray-50 border border-gray-100 shrink-0">{step.icon}</div>
-                        <div>
-                          <p className="text-sm font-bold text-[#0f172a]">{step.title}</p>
-                          <p className="text-xs text-[#0f172a]/50">{step.desc}</p>
-                        </div>
+                {/* What Happens Next Checklist */}
+                <div className="bg-slate-50 rounded-3xl p-6 md:p-8 max-w-2xl mx-auto text-left border border-slate-200/80 mb-8 space-y-4">
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Next Steps Checklist</div>
+                  {[
+                    { icon: <Truck className="w-4 h-4 text-[#04a1c6]" />, title: "Prepaid Courier Shipping Label", desc: "A free prepaid shipping label has been dispatched to your account." },
+                    { icon: <Package className="w-4 h-4 text-amber-500" />, title: "Ship Within 30 Days", desc: "Pack your device safely and drop off at any authorized shipping hub." },
+                    { icon: <ShieldCheck className="w-4 h-4 text-emerald-500" />, title: "50-Point Inspection & Verification", desc: "Device is verified by Select-Shield technicians upon arrival." },
+                    { icon: <CreditCard className="w-4 h-4 text-purple-500" />, title: "Credit Applied to Orders / Preorders", desc: "Instant credit applied directly toward your new order." },
+                  ].map((s) => (
+                    <div key={s.title} className="flex items-start gap-3.5">
+                      <div className="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 shrink-0">{s.icon}</div>
+                      <div>
+                        <div className="text-sm font-black text-[#0f172a]">{s.title}</div>
+                        <div className="text-xs text-slate-500 font-medium">{s.desc}</div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="flex gap-3 justify-center">
-                  {session?.user ? (
-                    <Link href={dashboardPath}>
-                      <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#04a1c6] text-white font-semibold text-sm cursor-pointer shadow-lg shadow-[#04a1c6]/20 hover:bg-[#0390b0] transition-colors">
-                        View in Dashboard <ChevronRight className="w-4 h-4" />
-                      </span>
-                    </Link>
-                  ) : (
-                    <Link href="/login?callbackUrl=/trade-in">
-                      <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#04a1c6] text-white font-semibold text-sm cursor-pointer shadow-lg shadow-[#04a1c6]/20 hover:bg-[#0390b0] transition-colors">
-                        Sign In to Track <ChevronRight className="w-4 h-4" />
-                      </span>
-                    </Link>
-                  )}
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <Link href={dashboardPath}>
+                    <span className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#04a1c6] text-white font-black text-xs uppercase tracking-wider cursor-pointer shadow-xl shadow-[#04a1c6]/30 hover:bg-[#0390b0] transition-all">
+                      View Trade-In Status <ChevronRight className="w-4 h-4" />
+                    </span>
+                  </Link>
                   <button
                     onClick={reset}
-                    className="px-6 py-3 rounded-xl border border-gray-200 text-[#0f172a]/60 font-semibold text-sm cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="px-8 py-4 rounded-2xl border border-slate-200 text-slate-700 font-black text-xs uppercase tracking-wider cursor-pointer hover:bg-slate-50 transition-colors"
                   >
-                    New Quote
+                    Calculate Another Device
                   </button>
                 </div>
               </motion.div>
             ) : (
-              /* ── Quote Form ── */
+              /* ── Interactive Valuation Wizard ── */
               <motion.div
                 key="form"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="glass-panel rounded-3xl p-8 md:p-12 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.06)]"
+                className="bg-white rounded-[3rem] p-7 md:p-12 border border-slate-200/80 shadow-2xl"
               >
-                <h2 className="text-2xl font-bold text-[#0f172a] mb-8">Get Your Instant Quote</h2>
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+                  <div>
+                    <h2 className="text-2xl font-black text-[#0f172a]">Instant Device Evaluator</h2>
+                    <p className="text-xs text-slate-500 font-medium">Select your device specifications below to calculate real-time trade-in credit.</p>
+                  </div>
+                  {canQuote && (
+                    <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200 flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5" /> Quote Ready
+                    </div>
+                  )}
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  {/* ── Left: inputs ── */}
-                  <div className="space-y-7">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                  {/* Left Column: Form Steps (7 Cols) */}
+                  <div className="lg:col-span-7 space-y-7">
 
-                    {/* Step 1: Brand */}
+                    {/* Step 1: Select Brand */}
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wider text-[#0f172a]/40 block mb-2">
-                        1 · Brand
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2.5">
+                        Step 1 · Select Brand
                       </label>
-                      <div className="flex flex-wrap gap-2">
-                        {BRANDS.map((b) => (
-                          <button
-                            key={b}
-                            onClick={() => { setBrand(b); setSelectedDevice(""); }}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer border ${
-                              brand === b
-                                ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-md shadow-[#04a1c6]/20"
-                                : "bg-white border-gray-200 text-[#0f172a]/60 hover:border-[#04a1c6]/40 hover:text-[#04a1c6]"
-                            }`}
-                          >
-                            {b}
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        {BRANDS.map((b) => {
+                          const isSelected = brand === b;
+                          return (
+                            <button
+                              key={b}
+                              onClick={() => {
+                                setBrand(b);
+                                const firstDev = DEVICES_BY_BRAND[b]?.[0]?.name || "";
+                                setSelectedDevice(firstDev);
+                              }}
+                              className={`py-3 px-2 rounded-2xl text-xs font-black transition-all cursor-pointer border text-center ${
+                                isSelected
+                                  ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-lg shadow-[#04a1c6]/30 scale-[1.02]"
+                                  : "bg-slate-50 text-slate-700 border-slate-200/80 hover:border-[#04a1c6]/40"
+                              }`}
+                            >
+                              {b}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    {/* Step 2: Model */}
-                    <AnimatePresence>
-                      {brand && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.25 }}
-                        >
-                          <label htmlFor="device-select" className="text-xs font-semibold uppercase tracking-wider text-[#0f172a]/40 block mb-2">
-                            2 · Model
-                          </label>
-                          <select
-                            id="device-select"
-                            value={selectedDevice}
-                            onChange={(e) => setSelectedDevice(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-[#0f172a] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#04a1c6]/30 focus:border-[#04a1c6]/30"
-                          >
-                            <option value="">Select model...</option>
-                            {devices.map((d) => (
-                              <option key={d.name} value={d.name}>{d.name}</option>
-                            ))}
-                          </select>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {/* Step 2: Select Model */}
+                    {brand && (
+                      <div>
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2.5">
+                          Step 2 · Select Model ({brand})
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+                          {devices.map((d) => {
+                            const isSelected = selectedDevice === d.name;
+                            return (
+                              <button
+                                key={d.name}
+                                onClick={() => setSelectedDevice(d.name)}
+                                className={`p-3.5 rounded-2xl text-left transition-all cursor-pointer border flex items-center justify-between ${
+                                  isSelected
+                                    ? "bg-slate-900 text-white border-slate-900 shadow-md scale-[1.01]"
+                                    : "bg-slate-50 text-slate-800 border-slate-200/80 hover:border-slate-400"
+                                }`}
+                              >
+                                <div>
+                                  <div className="text-xs font-black">{d.name}</div>
+                                  <div className={`text-[10px] font-bold ${isSelected ? "text-slate-400" : "text-slate-400"}`}>
+                                    Up to ${d.base} base credit
+                                  </div>
+                                </div>
+                                {d.tag && (
+                                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${
+                                    isSelected ? "bg-white/20 text-white" : "bg-cyan-100 text-cyan-800"
+                                  }`}>
+                                    {d.tag}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Step 3: Storage */}
-                    <AnimatePresence>
-                      {selectedDevice && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.25 }}
-                        >
-                          <label className="text-xs font-semibold uppercase tracking-wider text-[#0f172a]/40 block mb-2">
-                            3 · Storage
-                          </label>
-                          <div className="grid grid-cols-4 gap-2">
-                            {STORAGE_OPTIONS.map((s) => (
+                    {/* Step 3: Select Storage */}
+                    {selectedDevice && (
+                      <div>
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2.5">
+                          Step 3 · Storage Capacity
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          {STORAGE_OPTIONS.map((s) => {
+                            const isSelected = storage === s.label;
+                            return (
                               <button
                                 key={s.label}
                                 onClick={() => setStorage(s.label)}
-                                className={`py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer border text-center ${
-                                  storage === s.label
-                                    ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-md shadow-[#04a1c6]/20"
-                                    : "bg-white border-gray-200 text-[#0f172a]/60 hover:border-[#04a1c6]/40 hover:text-[#04a1c6]"
+                                className={`p-3 rounded-2xl text-center transition-all cursor-pointer border ${
+                                  isSelected
+                                    ? "bg-[#04a1c6] text-white border-[#04a1c6] shadow-md shadow-[#04a1c6]/30"
+                                    : "bg-slate-50 text-slate-700 border-slate-200/80 hover:border-[#04a1c6]/40"
                                 }`}
                               >
-                                {s.label}
+                                <div className="text-xs font-black">{s.label}</div>
+                                <div className={`text-[9px] font-bold ${isSelected ? "text-white/80" : "text-[#04a1c6]"}`}>
+                                  {s.bonus}
+                                </div>
                               </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Step 4: Condition */}
-                    <AnimatePresence>
-                      {storage && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.25 }}
-                        >
-                          <label className="text-xs font-semibold uppercase tracking-wider text-[#0f172a]/40 block mb-2">
-                            4 · Condition
-                          </label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {CONDITIONS.map((c) => (
+                    {/* Step 4: Device Condition */}
+                    {storage && (
+                      <div>
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2.5">
+                          Step 4 · Device Condition
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {CONDITIONS.map((c) => {
+                            const isSelected = condition === c.label;
+                            return (
                               <button
                                 key={c.label}
                                 onClick={() => setCondition(c.label)}
-                                aria-pressed={condition === c.label}
-                                className={`p-3 rounded-xl text-left transition-all cursor-pointer border-2 ${
-                                  condition === c.label
-                                    ? c.bg
-                                    : "bg-white border-gray-200 hover:border-gray-300"
+                                className={`p-3.5 rounded-2xl text-left transition-all cursor-pointer border ${
+                                  isSelected ? c.bg : "bg-slate-50 border-slate-200/80 hover:border-slate-300"
                                 }`}
                               >
-                                <span className={`text-sm font-bold block ${condition === c.label ? c.color : "text-[#0f172a]"}`}>
-                                  {c.label}
-                                </span>
-                                <span className="text-[11px] text-[#0f172a]/50 leading-snug">{c.desc}</span>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className={`text-xs font-black ${isSelected ? c.color : "text-slate-900"}`}>
+                                    {c.label}
+                                  </span>
+                                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase border ${c.badgeBg}`}>
+                                    {(c.multiplier * 100)}% value
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">{c.desc}</p>
                               </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Step 5: Carrier status */}
-                    <AnimatePresence>
-                      {condition && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.25 }}
-                        >
-                          <label className="text-xs font-semibold uppercase tracking-wider text-[#0f172a]/40 block mb-2">
-                            5 · Carrier Status
-                          </label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {CARRIER_OPTIONS.map((c) => (
+                    {/* Step 5: Carrier Lock Status */}
+                    {condition && (
+                      <div>
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2.5">
+                          Step 5 · Carrier Network Lock
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {CARRIER_OPTIONS.map((c) => {
+                            const isSelected = carrier === c.key;
+                            return (
                               <button
                                 key={c.key}
                                 onClick={() => setCarrier(c.key)}
-                                className={`flex items-center gap-3 p-3 rounded-xl text-left transition-all cursor-pointer border-2 ${
-                                  carrier === c.key
-                                    ? "bg-[#04a1c6]/5 border-[#04a1c6]/40 text-[#04a1c6]"
-                                    : "bg-white border-gray-200 text-[#0f172a]/60 hover:border-gray-300"
+                                className={`flex items-center gap-3 p-3.5 rounded-2xl text-left transition-all cursor-pointer border ${
+                                  isSelected
+                                    ? "bg-cyan-50/80 border-[#04a1c6] text-[#04a1c6] ring-2 ring-[#04a1c6]/20"
+                                    : "bg-slate-50 border-slate-200/80 text-slate-700 hover:border-slate-300"
                                 }`}
                               >
-                                <span className={carrier === c.key ? "text-[#04a1c6]" : "text-[#0f172a]/40"}>{c.icon}</span>
+                                <div className="p-2 rounded-xl bg-white shadow-sm">{c.icon}</div>
                                 <div>
-                                  <span className="text-sm font-bold block">{c.label}</span>
-                                  <span className="text-[11px] text-[#0f172a]/40">{c.desc}</span>
+                                  <div className="text-xs font-black">{c.label}</div>
+                                  <div className="text-[10px] text-slate-400 font-medium">{c.desc}</div>
                                 </div>
                               </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Step 6: IMEI */}
-                    <AnimatePresence>
-                      {carrier && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.25 }}
-                        >
-                          <label htmlFor="imei-input" className="text-xs font-semibold uppercase tracking-wider text-[#0f172a]/40 block mb-2">
-                            6 · IMEI <span className="normal-case text-[#0f172a]/30">(optional — improves accuracy)</span>
-                          </label>
-                          <div className="relative">
-                            <input
-                              id="imei-input"
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={15}
-                              value={imei}
-                              onChange={(e) => setImei(e.target.value.replace(/\D/g, ""))}
-                              placeholder="15-digit IMEI"
-                              className={`w-full px-4 py-3 pr-10 rounded-xl border text-sm text-[#0f172a] placeholder:text-[#0f172a]/30 focus:outline-none focus:ring-2 transition-colors ${
-                                imeiState === "valid"
-                                  ? "border-emerald-400 focus:ring-emerald-200 bg-emerald-50/30"
-                                  : imeiState === "invalid"
-                                  ? "border-rose-300 focus:ring-rose-200 bg-rose-50/20"
-                                  : "border-gray-200 focus:ring-[#04a1c6]/30 bg-white"
-                              }`}
-                            />
-                            {imeiState === "valid" && (
-                              <CheckCircle className="w-4 h-4 text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2" />
-                            )}
-                            {imeiState === "invalid" && (
-                              <AlertCircle className="w-4 h-4 text-rose-400 absolute right-3 top-1/2 -translate-y-1/2" />
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between mt-1.5">
-                            <p className="text-xs text-[#0f172a]/40">Dial <span className="font-mono font-bold">*#06#</span> to find it</p>
-                            {imeiState === "invalid" && (
-                              <p className="text-xs text-rose-500 font-medium">{imei.length}/15 digits</p>
-                            )}
-                            {imeiState === "valid" && (
-                              <p className="text-xs text-emerald-600 font-medium">Valid IMEI ✓</p>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {/* Step 6: Optional IMEI Validator */}
+                    {carrier && (
+                      <div>
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">
+                          Step 6 · Device IMEI <span className="normal-case text-slate-400 font-bold">(Optional — Dial *#06#)</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={15}
+                            value={imei}
+                            onChange={(e) => setImei(e.target.value.replace(/\D/g, ""))}
+                            placeholder="Enter 15-digit IMEI number for instant unlock check"
+                            className={`w-full px-4 py-3 rounded-2xl border text-xs font-bold text-slate-900 focus:outline-none transition-colors ${
+                              imeiState === "valid"
+                                ? "border-emerald-500 bg-emerald-50/30 focus:ring-2 focus:ring-emerald-400/20"
+                                : imeiState === "invalid"
+                                ? "border-rose-400 bg-rose-50/30 focus:ring-2 focus:ring-rose-400/20"
+                                : "border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#04a1c6]/30"
+                            }`}
+                          />
+                          {imeiState === "valid" && (
+                            <CheckCircle className="w-4 h-4 text-emerald-500 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                          )}
+                          {imeiState === "invalid" && (
+                            <AlertCircle className="w-4 h-4 text-rose-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* ── Right: quote panel ── */}
-                  <div className="flex flex-col" id="quote-panel">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={baseValue > 0 ? "filled" : "empty"}
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.97 }}
-                        transition={{ duration: 0.3 }}
-                        className={`rounded-2xl p-8 border transition-colors duration-300 ${
-                          baseValue > 0
-                            ? "bg-[#0f172a] border-[#0f172a]/10 text-white"
-                            : "bg-gray-50 border-gray-100 text-[#0f172a]/40"
-                        }`}
-                      >
-                        <p className="text-xs font-semibold uppercase tracking-wider mb-4 opacity-50">
-                          Estimated Value
-                        </p>
+                  {/* Right Column: Live Valuation Box (5 Cols) */}
+                  <div className="lg:col-span-5 flex flex-col justify-between" id="valuation-panel">
+                    <div className="p-7 rounded-[2.5rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white shadow-2xl relative overflow-hidden space-y-6">
+                      <div className="absolute top-0 right-0 w-48 h-48 bg-[#04a1c6]/20 blur-[80px] pointer-events-none" />
 
-                        <motion.p
-                          key={baseValue}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.35 }}
-                          className={`text-6xl font-black mb-2 tracking-tight ${baseValue > 0 ? "text-[#04a1c6]" : ""}`}
-                        >
-                          {baseValue > 0 ? `$${baseValue}` : "$—"}
-                        </motion.p>
-
-                        {baseValue > 0 ? (
-                          <>
-                            <p className="text-sm text-white/50 mb-1">
-                              {selectedDevice} · {storage} · {condition}
-                            </p>
-                            <p className="text-sm text-white/50 mb-6">
-                              Lock this value for 90 days
-                            </p>
-                            <div className="space-y-2.5">
-                              <div className="flex items-center gap-2 text-sm text-white/60">
-                                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                                <span>Escrow-protected transaction</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-white/60">
-                                <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                                <span>Price guaranteed for 90 days</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-white/60">
-                                <Truck className="w-4 h-4 text-[#04a1c6] shrink-0" />
-                                <span>Free prepaid shipping label</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-white/60">
-                                <Zap className="w-4 h-4 text-yellow-400 shrink-0" />
-                                <span>Credit applied in 3–5 business days</span>
-                              </div>
-                            </div>
-
-                            {/* Breakdown */}
-                            {stor && carr && cond && (
-                              <div className="mt-6 pt-5 border-t border-white/10 space-y-1.5 text-xs text-white/40">
-                                <div className="flex justify-between">
-                                  <span>Base value</span>
-                                  <span className="font-bold text-white/60">${device?.base ?? 0}</span>
-                                </div>
-                                {stor.multiplier !== 1 && (
-                                  <div className="flex justify-between">
-                                    <span>Storage ({stor.label})</span>
-                                    <span className="font-bold text-white/60">×{stor.multiplier.toFixed(2)}</span>
-                                  </div>
-                                )}
-                                <div className="flex justify-between">
-                                  <span>Condition ({cond.label})</span>
-                                  <span className="font-bold text-white/60">×{cond.multiplier.toFixed(2)}</span>
-                                </div>
-                                {carr.multiplier !== 1 && (
-                                  <div className="flex justify-between">
-                                    <span>Carrier locked</span>
-                                    <span className="font-bold text-rose-400">×{carr.multiplier.toFixed(2)}</span>
-                                  </div>
-                                )}
-                                <div className="flex justify-between pt-1.5 border-t border-white/10 text-white/70 font-bold">
-                                  <span>Your quote</span>
-                                  <span className="text-[#04a1c6]">${baseValue}</span>
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-sm opacity-60">
-                            Complete all steps on the left to see your quote.
-                          </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Guaranteed Valuation</span>
+                        {baseValue > 0 && (
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30">
+                            🔒 90-Day Lock
+                          </span>
                         )}
-                      </motion.div>
-                    </AnimatePresence>
+                      </div>
+
+                      {/* Live Price Tag */}
+                      <div>
+                        <div className="text-5xl md:text-6xl font-black text-[#04a1c6] tracking-tight">
+                          {baseValue > 0 ? `$${baseValue}` : "$0"}
+                        </div>
+                        <p className="text-xs text-slate-300 font-medium mt-1">
+                          {selectedDevice ? `${selectedDevice} (${storage} · ${condition})` : "Configure device options"}
+                        </p>
+                      </div>
+
+                      {/* Calculation Breakdown */}
+                      {baseValue > 0 && device && (
+                        <div className="space-y-2 pt-4 border-t border-white/10 text-xs">
+                          <div className="flex justify-between text-slate-400 font-medium">
+                            <span>Base Model Credit ({device.name})</span>
+                            <span className="font-bold text-white">${device.base}</span>
+                          </div>
+                          {stor && stor.multiplier !== 1 && (
+                            <div className="flex justify-between text-slate-400 font-medium">
+                              <span>Storage Bonus ({stor.label})</span>
+                              <span className="font-bold text-emerald-400">×{stor.multiplier.toFixed(2)}</span>
+                            </div>
+                          )}
+                          {cond && (
+                            <div className="flex justify-between text-slate-400 font-medium">
+                              <span>Condition ({cond.label})</span>
+                              <span className="font-bold text-cyan-400">×{cond.multiplier.toFixed(2)}</span>
+                            </div>
+                          )}
+                          {carr && carr.multiplier !== 1 && (
+                            <div className="flex justify-between text-slate-400 font-medium">
+                              <span>Carrier Lock Adjustment</span>
+                              <span className="font-bold text-amber-400">×{carr.multiplier.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between pt-2 border-t border-white/10 text-sm font-black text-white">
+                            <span>Total Estimated Payout</span>
+                            <span className="text-[#04a1c6]">${baseValue}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Benefits List */}
+                      <div className="space-y-2.5 text-xs text-slate-300 font-medium">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Escrow-Protected Guarantee</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Truck className="w-4 h-4 text-[#04a1c6] shrink-0" />
+                          <span>Free Prepaid Courier Shipping Label</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>Rate Locked for 90 Days</span>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* CTAs */}
-                    <div className="flex flex-col gap-3 mt-6">
-                      {/* Primary: Lock In Value — commits quote */}
+                    <div className="space-y-3 mt-6">
                       <button
                         disabled={!canQuote || loading}
                         onClick={handleLock}
-                        className={`w-full py-4 rounded-xl font-bold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                        className={`w-full py-4.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl ${
                           canQuote && !loading
-                            ? "bg-[#04a1c6] text-white shadow-lg shadow-[#04a1c6]/25 hover:bg-[#0390b0] hover:shadow-[#04a1c6]/40"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            ? "bg-[#04a1c6] text-white shadow-[#04a1c6]/30 hover:bg-[#0390b0] active:scale-95"
+                            : "bg-slate-100 text-slate-400 cursor-not-allowed"
                         }`}
                       >
                         {loading ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Locking in your quote…
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            Locking Valuation...
                           </>
                         ) : (
                           <>
                             <Lock className="w-4 h-4" />
-                            Lock In Value{baseValue > 0 ? ` — $${baseValue}` : ""}
+                            Lock In Value — ${baseValue}
                           </>
                         )}
                       </button>
 
-                      {/* Secondary: Just Get Quote — no commitment, highlights the panel */}
                       <button
                         disabled={!canQuote || loading}
                         onClick={handleJustQuote}
-                        className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all cursor-pointer ${
+                        className={`w-full py-3.5 rounded-2xl font-bold text-xs border transition-all cursor-pointer ${
                           canQuote && !loading
-                            ? "border-[#04a1c6] text-[#04a1c6] hover:bg-[#04a1c6]/5"
-                            : "border-gray-200 text-gray-400 cursor-not-allowed"
+                            ? "border-slate-300 text-slate-700 hover:bg-slate-50"
+                            : "border-slate-200 text-slate-300 cursor-not-allowed"
                         }`}
                       >
-                        Just Show My Quote
+                        Review Quote Breakdown
                       </button>
 
                       {quoted && !locked && (
-                        <motion.p
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="text-xs text-center text-[#0f172a]/40"
-                        >
-                          Your quote is shown above. Lock it in when you&apos;re ready — no commitment yet.
-                        </motion.p>
+                        <p className="text-[10px] text-center text-slate-400 font-bold">
+                          Quote summary displayed above. Click &quot;Lock In Value&quot; to reserve your rate.
+                        </p>
                       )}
-
-                      <p className="text-[11px] text-center text-[#0f172a]/30">
-                        Locking reserves your quote at no cost. You decide when to ship.
-                      </p>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Loader2 } from "lucide-react";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 interface Message {
   id: string;
@@ -40,13 +41,13 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input, sessionId }),
       });
-      const data = await res.json();
+      const data = await safeFetchJson(res);
 
-      if (data.sessionId) setSessionId(data.sessionId);
+      if (data?.sessionId) setSessionId(data.sessionId);
 
       setMessages((prev) => [
         ...prev,
-        { id: data.message?.id || Date.now().toString(), role: "ASSISTANT", content: data.message?.content || "Sorry, something went wrong." },
+        { id: data?.message?.id || Date.now().toString(), role: "ASSISTANT", content: data?.message?.content || "Sorry, something went wrong." },
       ]);
     } catch {
       setMessages((prev) => [

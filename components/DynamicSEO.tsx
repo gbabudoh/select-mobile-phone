@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { safeFetchJson } from "@/lib/safe-fetch";
+
 interface SEOConfig {
   title: string;
   description?: string;
@@ -20,9 +22,9 @@ export function DynamicSEO() {
     // We can either fetch specific page SEO or a list
     // Fetching by path is cleaner for runtime
     fetch(`/api/admin/seo?pagePath=${encodeURIComponent(pathname)}`)
-      .then(res => res.json())
+      .then(res => safeFetchJson(res))
       .then(data => {
-        if (data.seo) setSeo(data.seo);
+        if (data?.seo) setSeo(data.seo);
       })
       .catch(err => console.error("SEO fetch error:", err));
   }, [pathname]);

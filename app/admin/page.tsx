@@ -8,6 +8,7 @@ import {
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 interface Stats {
   activeSellers: number;

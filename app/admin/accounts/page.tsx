@@ -6,6 +6,7 @@ import {
   ChevronRight, AlertCircle, RefreshCw, Users, TrendingUp, Activity, ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -222,8 +223,8 @@ export default function AdminAccountsPage() {
       p.append("page", String(page));
       p.append("limit", "15");
       const res = await fetch(`/api/admin/accounts?${p}`, { signal: abortRef.current.signal });
-      const data = await res.json();
-      if (data.users) {
+      const data = await safeFetchJson(res);
+      if (data?.users) {
         setUsers(data.users.map((u: AdminUser) => ({ ...u, verification: getVerification(u) })));
         setTotal(data.pagination?.total ?? 0);
         setTotalPages(data.pagination?.totalPages ?? 1);
@@ -236,7 +237,7 @@ export default function AdminAccountsPage() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   useEffect(() => {
-    fetch("/api/admin/stats").then((r) => r.json()).then(setStats).catch(() => {});
+    fetch("/api/admin/stats").then((r) => safeFetchJson(r)).then((d) => d && setStats(d)).catch(() => {});
   }, []);
 
   async function handleAction(userId: string, payload: Record<string, string>) {
@@ -245,7 +246,8 @@ export default function AdminAccountsPage() {
       const res = await fetch(`/api/admin/accounts/${userId}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       });
-      if (!res.ok) { setActionError((await res.json()).error || "Action failed"); return false; }
+      const data = await safeFetchJson(res);
+      if (!res.ok) { setActionError(data?.error || "Action failed"); return false; }
       await fetchUsers(); setSelectedUser(null); return true;
     } catch { setActionError("Network error"); return false; }
     finally { setActionLoading(false); }
@@ -256,7 +258,8 @@ export default function AdminAccountsPage() {
     setActionLoading(true); setActionError(null);
     try {
       const res = await fetch(`/api/admin/accounts/${userId}`, { method: "DELETE" });
-      if (!res.ok) { setActionError((await res.json()).error || "Delete failed"); return; }
+      const data = await safeFetchJson(res);
+      if (!res.ok) { setActionError(data?.error || "Delete failed"); return; }
       await fetchUsers(); setSelectedUser(null);
     } catch { setActionError("Network error"); }
     finally { setActionLoading(false); }
@@ -269,9 +272,10 @@ export default function AdminAccountsPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kycDocumentId, action }),
       });
-      if (!res.ok) { setActionError((await res.json()).error || "KYC action failed"); return; }
+      const data = await safeFetchJson(res);
+      if (!res.ok) { setActionError(data?.error || "KYC action failed"); return; }
       await fetchUsers();
-      const refreshed = await fetch(`/api/admin/accounts/${userId}`).then((r) => r.json());
+      const refreshed = await fetch(`/api/admin/accounts/${userId}`).then((r) => safeFetchJson(r));
       if (refreshed?.id) setSelectedUser({ ...refreshed, verification: getVerification(refreshed) });
     } catch { setActionError("Network error"); }
     finally { setActionLoading(false); }

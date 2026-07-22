@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Navigation } from "../../components/Navigation";
 import Link from "next/link";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 interface Message {
   id: string;
@@ -60,16 +61,16 @@ export default function AskSelmaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: msg, sessionId }),
       });
-      const data = await res.json();
+      const data = await safeFetchJson(res);
 
-      if (data.sessionId) setSessionId(data.sessionId);
+      if (data?.sessionId) setSessionId(data.sessionId);
 
       setMessages((prev) => [
         ...prev,
         {
-          id: data.message?.id || (Date.now() + 1).toString(),
+          id: data?.message?.id || (Date.now() + 1).toString(),
           role: "ASSISTANT",
-          content: data.message?.content || "Sorry, something went wrong. Please try again.",
+          content: data?.message?.content || "Sorry, something went wrong. Please try again.",
         },
       ]);
     } catch {

@@ -17,7 +17,8 @@ export interface Product {
   planDetails?: { data: string; talk: string; text: string; contract: string };
   diagnosticScore?: number;
   specs?: Record<string, string>;
-  colors?: { name: string; hex: string }[];
+  colors?: { name: string; hex: string; image?: string }[];
+  images?: string[];
   shipping: string;
   inStock: boolean;
   country: "US" | "CA" | "US/CA";
@@ -28,11 +29,22 @@ export const PRODUCTS: Product[] = [
   {
     id: "1", name: "iPhone 18 Pro 256GB", brand: "Apple", category: "HANDSET",
     condition: "New", price: 1199, image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=400&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&h=800&fit=crop"
+    ],
     rating: 4.9, reviews: 342, seller: "TechWholesale Inc.", sellerType: "Wholesaler",
     isSelectVerified: true, diagnosticScore: 50, shipping: "Free 2-Day",
     inStock: true, country: "US/CA", tags: ["5G", "Dual eSIM", "Titanium", "Bulk"],
     specs: { Storage: "256GB", RAM: "8GB", Display: "6.3\" OLED", Chip: "A20 Pro" },
-    colors: [{ name: "Natural Titanium", hex: "#8a8680" }, { name: "Blue Titanium", hex: "#3d4f5f" }, { name: "White Titanium", hex: "#f0ede8" }, { name: "Black Titanium", hex: "#2c2c2e" }],
+    colors: [
+      { name: "Natural Titanium", hex: "#8a8680", image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&h=800&fit=crop" },
+      { name: "Blue Titanium", hex: "#3d4f5f", image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&h=800&fit=crop" },
+      { name: "White Titanium", hex: "#f0ede8", image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&h=800&fit=crop" },
+      { name: "Black Titanium", hex: "#2c2c2e", image: "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&h=800&fit=crop" }
+    ],
     bulkAvailable: true, minOrderQty: 10,
   },
   {

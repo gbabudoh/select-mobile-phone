@@ -13,6 +13,7 @@ import Image from "next/image";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { safeFetchJson } from "@/lib/safe-fetch";
 
 // --- Types ---
 interface PriceTier {
@@ -209,7 +210,7 @@ export default function WholesalerInventoryPage() {
       
       if (!res.ok) throw new Error("Upload failed");
 
-      const data = await res.json();
+      const data = await safeFetchJson(res);
       setUploadProgress(100);
       setImportStep("success");
       

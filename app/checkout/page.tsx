@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { safeFetchJson } from "@/lib/safe-fetch";
 import { useCart } from "../../context/CartContext";
 import { useSession } from "next-auth/react";
 import { Navigation } from "../../components/Navigation";
@@ -94,9 +95,9 @@ export default function CheckoutPage() {
           }),
         });
 
-        const orderData = await orderRes.json();
-        if (orderData.error) {
-          alert(`Order Creation Failed: ${orderData.error}`);
+        const orderData = await safeFetchJson(orderRes);
+        if (!orderData || orderData.error) {
+          alert(`Order Creation Failed: ${orderData?.error || "Invalid response from server"}`);
           setLoading(false);
           return;
         }
@@ -114,9 +115,9 @@ export default function CheckoutPage() {
           body: JSON.stringify({ orderId: createdOrder.id }),
         });
 
-        const intentData = await intentRes.json();
-        if (intentData.error) {
-          alert(`Escrow Initialization Failed: ${intentData.error}`);
+        const intentData = await safeFetchJson(intentRes);
+        if (!intentData || intentData.error) {
+          alert(`Escrow Initialization Failed: ${intentData?.error || "Invalid response from server"}`);
           setLoading(false);
           return;
         }
