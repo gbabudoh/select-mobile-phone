@@ -6,7 +6,7 @@ import {
   TrendingUp, Activity, Clock, Zap,
   Eye, Power, Trash2,
   Check, Info, X,
-  SlidersHorizontal, Download
+  SlidersHorizontal, Download, QrCode, ShieldCheck, CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,10 +27,85 @@ interface ESIMProfile {
   expiryDate: string;
   carrier: string;
   network: string;
+  qrCodeUrl?: string;
+  lpaString?: string;
 }
 
-// --- Mock Data ---
-const MOCK_ESIMS: ESIMProfile[] = [];
+// --- Pre-seeded Initial Data ---
+const INITIAL_ESIMS: ESIMProfile[] = [
+  {
+    id: "ESIM-9012",
+    iccid: "89014103289104820194",
+    imei: "358920194820194",
+    phoneNumber: "+1 (555) 234-8901",
+    subscriberName: "Sarah Jenkins",
+    deviceModel: "iPhone 18 Pro Max",
+    planType: "Cross-Border Unlimited 5G",
+    planSpeed: "Ultra Wideband",
+    status: "Active",
+    dataUsedGB: 18.4,
+    dataTotalGB: 50,
+    activationDate: "2026-07-01",
+    expiryDate: "2027-07-01",
+    carrier: "SelectMobile Network",
+    network: "5G Sub-6 / mmWave",
+    lpaString: "LPA:1$smdp.selectmobile.com$SM-9012-PROV",
+  },
+  {
+    id: "ESIM-9013",
+    iccid: "89014103289104820195",
+    imei: "354029104820195",
+    phoneNumber: "+1 (555) 892-4102",
+    subscriberName: "Marcus Vance",
+    deviceModel: "Galaxy S26 Ultra",
+    planType: "Mint Unlimited 40GB",
+    planSpeed: "5G High Speed",
+    status: "Active",
+    dataUsedGB: 32.1,
+    dataTotalGB: 40,
+    activationDate: "2026-07-05",
+    expiryDate: "2026-10-05",
+    carrier: "Mint Mobile Partner",
+    network: "5G Sub-6",
+    lpaString: "LPA:1$smdp.mintmobile.com$MM-9013-PROV",
+  },
+  {
+    id: "ESIM-9014",
+    iccid: "89014103289104820196",
+    imei: "359102840192847",
+    phoneNumber: "+1 (555) 310-9948",
+    subscriberName: "David Miller",
+    deviceModel: "Pixel 10 Pro XL",
+    planType: "AT&T Prepaid 15GB",
+    planSpeed: "5G LTE",
+    status: "Pending",
+    dataUsedGB: 0.0,
+    dataTotalGB: 15,
+    activationDate: "2026-07-20",
+    expiryDate: "2026-08-20",
+    carrier: "AT&T Prepaid",
+    network: "5G Sub-6",
+    lpaString: "LPA:1$smdp.att.com$ATT-9014-PROV",
+  },
+  {
+    id: "ESIM-9015",
+    iccid: "89014103289104820197",
+    imei: "352910482019482",
+    phoneNumber: "+1 (555) 712-4019",
+    subscriberName: "Elena Rostova",
+    deviceModel: "iPhone 17 Pro",
+    planType: "Koodo 20GB Canada",
+    planSpeed: "5G LTE",
+    status: "Suspended",
+    dataUsedGB: 19.8,
+    dataTotalGB: 20,
+    activationDate: "2026-06-12",
+    expiryDate: "2026-07-12",
+    carrier: "Koodo Flanker",
+    network: "Telus 5G",
+    lpaString: "LPA:1$smdp.koodomobile.com$KD-9015-PROV",
+  },
+];
 
 const statusConfig = {
   Active: { dot: "bg-emerald-400", bg: "bg-emerald-50", text: "text-emerald-600", ring: "ring-emerald-100" },
@@ -40,9 +115,24 @@ const statusConfig = {
 };
 
 export default function NetworkProviderESIMPage() {
+  const [esims, setEsims] = useState<ESIMProfile[]>(INITIAL_ESIMS);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [toasts, setToasts] = useState<{id: number; msg: string; type: "success" | "error" | "info"}[]>([]);
+  
+  // Provisioning Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDetail, setSelectedDetail] = useState<ESIMProfile | null>(null);
+  
+  // Form State
+  const [subscriberName, setSubscriberName] = useState("");
+  const [deviceModel, setDeviceModel] = useState("iPhone 18 Pro Max");
+  const [carrier, setCarrier] = useState("SelectMobile Network");
+  const [planType, setPlanType] = useState("Cross-Border Unlimited 5G");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [imei, setImei] = useState("");
+  const [dataTotalGB, setDataTotalGB] = useState("50");
+  const [provisioning, setProvisioning] = useState(false);
 
   const addToast = (msg: string, type: "success" | "error" | "info" = "success") => {
     const id = Date.now();
@@ -51,7 +141,7 @@ export default function NetworkProviderESIMPage() {
   };
 
   const searchLower = searchQuery.toLowerCase();
-  const filteredESIMs = MOCK_ESIMS.filter(esim => {
+  const filteredESIMs = esims.filter(esim => {
     const matchesSearch =
       esim.iccid.toLowerCase().includes(searchLower) ||
       esim.phoneNumber.toLowerCase().includes(searchLower) ||
@@ -62,9 +152,95 @@ export default function NetworkProviderESIMPage() {
     return matchesSearch && matchesTab;
   });
 
-  const activeCount = MOCK_ESIMS.filter(e => e.status === "Active").length;
-  const pendingCount = MOCK_ESIMS.filter(e => e.status === "Pending").length;
-  const totalDataUsed = MOCK_ESIMS.reduce((sum, e) => sum + e.dataUsedGB, 0).toFixed(1);
+  const activeCount = esims.filter(e => e.status === "Active").length;
+  const pendingCount = esims.filter(e => e.status === "Pending").length;
+  const totalDataUsed = esims.reduce((sum, e) => sum + e.dataUsedGB, 0).toFixed(1);
+
+  const handleOpenProvisionModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseProvisionModal = () => {
+    setIsModalOpen(false);
+    setSubscriberName("");
+    setPhoneNumber("");
+    setImei("");
+  };
+
+  const handleProvisionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subscriberName) {
+      addToast("Please enter subscriber full name.", "error");
+      return;
+    }
+
+    setProvisioning(true);
+    await new Promise(r => setTimeout(r, 1000));
+
+    const generatedId = `ESIM-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedICCID = `890141032${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+    const generatedPhone = phoneNumber || `+1 (555) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newProfile: ESIMProfile = {
+      id: generatedId,
+      iccid: generatedICCID,
+      imei: imei || "358920194820199",
+      phoneNumber: generatedPhone,
+      subscriberName,
+      deviceModel,
+      planType,
+      planSpeed: "Ultra Wideband 5G",
+      status: "Active",
+      dataUsedGB: 0.0,
+      dataTotalGB: Number(dataTotalGB),
+      activationDate: new Date().toISOString().split("T")[0],
+      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      carrier,
+      network: "5G Sub-6 / mmWave",
+      lpaString: `LPA:1$smdp.selectmobile.com$${generatedId}-PROV`,
+    };
+
+    setEsims(prev => [newProfile, ...prev]);
+    setProvisioning(false);
+    handleCloseProvisionModal();
+    addToast(`eSIM Profile ${generatedId} provisioned for ${subscriberName}!`, "success");
+  };
+
+  const handleToggleStatus = (id: string, currentStatus: ESIMProfile["status"], subscriber: string) => {
+    let nextStatus: ESIMProfile["status"] = "Active";
+    let actionName = "Activated";
+
+    if (currentStatus === "Active") {
+      nextStatus = "Suspended";
+      actionName = "Suspended";
+    } else if (currentStatus === "Pending") {
+      nextStatus = "Active";
+      actionName = "Activated";
+    } else if (currentStatus === "Suspended") {
+      nextStatus = "Active";
+      actionName = "Reactivated";
+    }
+
+    setEsims(prev => prev.map(e => e.id === id ? { ...e, status: nextStatus } : e));
+    addToast(`Profile ${id} (${subscriber}) ${actionName}!`, nextStatus === "Active" ? "success" : "info");
+  };
+
+  const handleRemoveProfile = (id: string, subscriber: string) => {
+    setEsims(prev => prev.filter(e => e.id !== id));
+    addToast(`Removed profile ${id} for ${subscriber}.`, "error");
+  };
+
+  const handleExportAudit = () => {
+    const csvHeader = "ID,ICCID,Subscriber,Device,Phone,Plan,Status,DataUsedGB,DataTotalGB\n";
+    const csvRows = esims.map(e => `${e.id},${e.iccid},"${e.subscriberName}","${e.deviceModel}",${e.phoneNumber},"${e.planType}",${e.status},${e.dataUsedGB},${e.dataTotalGB}`).join("\n");
+    const blob = new Blob([csvHeader + csvRows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `esim_audit_report_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    addToast("Exported eSIM Audit Report CSV!", "success");
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 antialiased font-sans pb-20 relative">
@@ -98,11 +274,11 @@ export default function NetworkProviderESIMPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] uppercase tracking-tight">eSIM Management</h1>
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Monitor activations, manage profiles, and provision MVNO services</p>
+          <h1 className="text-2xl font-black text-[#0f172a] uppercase tracking-tight">eSIM Management Engine</h1>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Provision MVNO profiles, issue QR activation codes, and manage live subscribers</p>
         </div>
         <button
-          onClick={() => addToast("eSIM provisioning wizard initiated...", "info")}
+          onClick={handleOpenProvisionModal}
           className="flex items-center gap-2 px-6 py-3 bg-[#0f172a] text-white rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Provision New
@@ -112,7 +288,7 @@ export default function NetworkProviderESIMPage() {
       {/* KPI Analytics Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Profiles", value: MOCK_ESIMS.length.toString(), icon: Cpu, color: "text-blue-500", bg: "bg-blue-50" },
+          { label: "Total Profiles", value: esims.length.toString(), icon: Cpu, color: "text-blue-500", bg: "bg-blue-50" },
           { label: "Active eSIMs", value: activeCount.toString(), icon: Signal, color: "text-emerald-500", bg: "bg-emerald-50" },
           { label: "Data Consumed", value: `${totalDataUsed} GB`, icon: TrendingUp, color: "text-violet-500", bg: "bg-violet-50" },
           { label: "Pending Activation", value: pendingCount.toString(), icon: Clock, color: "text-amber-500", bg: "bg-amber-50" }
@@ -157,7 +333,10 @@ export default function NetworkProviderESIMPage() {
                 className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-[#dcdcdc] rounded-xl text-sm font-bold text-[#0f172a] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
             </div>
-            <button className="p-2.5 bg-white border border-[#dcdcdc] rounded-xl text-slate-400 hover:text-[#0f172a] hover:border-slate-300 shadow-sm transition-all cursor-pointer active:scale-95">
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="p-2.5 bg-white border border-[#dcdcdc] rounded-xl text-slate-400 hover:text-[#0f172a] hover:border-slate-300 shadow-sm transition-all cursor-pointer active:scale-95"
+            >
               <SlidersHorizontal className="w-4 h-4" />
             </button>
           </div>
@@ -167,12 +346,18 @@ export default function NetworkProviderESIMPage() {
       {/* eSIM Profile Cards */}
       <div className="space-y-4">
         {filteredESIMs.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-[#dcdcdc] p-24 text-center shadow-sm">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#dcdcdc]">
+          <div className="bg-white rounded-3xl border border-[#dcdcdc] p-20 text-center shadow-sm space-y-4">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-[#dcdcdc]">
               <Cpu className="w-10 h-10 text-slate-300" />
             </div>
-            <h3 className="text-xl font-extrabold text-[#0f172a] mb-2 uppercase tracking-wide">No eSIM Profiles Found</h3>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Adjust your filters or provision new eSIM profiles</p>
+            <h3 className="text-xl font-extrabold text-[#0f172a] uppercase tracking-wide">No eSIM Profiles Found</h3>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Provision your first eSIM profile to begin carrier distribution</p>
+            <button
+              onClick={handleOpenProvisionModal}
+              className="px-6 py-3 bg-[#0f172a] text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 inline mr-2" /> Provision New eSIM
+            </button>
           </div>
         ) : (
           filteredESIMs.map((esim, idx) => {
@@ -185,7 +370,7 @@ export default function NetworkProviderESIMPage() {
                 key={esim.id}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.06 }}
+                transition={{ delay: idx * 0.05 }}
                 className="bg-white border border-[#dcdcdc] rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-blue-100 transition-all duration-300 group"
               >
                 <div className="flex flex-col xl:flex-row gap-5 items-start xl:items-center">
@@ -200,7 +385,7 @@ export default function NetworkProviderESIMPage() {
                         <h3 className="text-sm font-black text-[#0f172a] uppercase tracking-wide">{esim.subscriberName}</h3>
                       </div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{esim.deviceModel}</p>
-                      <p className="text-[9px] font-mono text-slate-300 tracking-wider mt-0.5">{esim.iccid}</p>
+                      <p className="text-[9px] font-mono text-slate-400 tracking-wider mt-0.5">{esim.iccid}</p>
                     </div>
                   </div>
 
@@ -238,7 +423,7 @@ export default function NetworkProviderESIMPage() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] font-black text-[#0f172a]">{esim.dataUsedGB} GB</span>
-                            <span className="text-[8px] font-bold text-slate-300">/ {esim.dataTotalGB} GB</span>
+                            <span className="text-[8px] font-bold text-slate-400">/ {esim.dataTotalGB} GB</span>
                           </div>
                           <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                             <div className={`h-full ${usageColor} rounded-full transition-all duration-500`} style={{ width: `${usagePercent}%` }} />
@@ -256,56 +441,46 @@ export default function NetworkProviderESIMPage() {
                         <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                         {esim.status}
                       </span>
-                      <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">{esim.planSpeed}</span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{esim.planSpeed}</span>
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => addToast(`Viewing details for ${esim.subscriberName}...`, "info")}
+                        onClick={() => setSelectedDetail(esim)}
                         className="px-3.5 py-2 bg-slate-50 border border-[#dcdcdc] rounded-xl text-[10px] font-black text-[#0f172a] uppercase tracking-widest hover:bg-slate-100 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
                       >
                         <Eye className="w-3 h-3" /> Details
                       </button>
-                      {esim.status === "Active" ? (
-                        <button
-                          onClick={() => addToast(`Suspending eSIM for ${esim.subscriberName}...`, "error" as const)}
-                          className="px-3.5 py-2 bg-amber-50 border border-amber-200 rounded-xl text-[10px] font-black text-amber-600 uppercase tracking-widest hover:bg-amber-100 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
-                        >
-                          <Power className="w-3 h-3" /> Suspend
-                        </button>
-                      ) : esim.status === "Pending" ? (
-                        <button
-                          onClick={() => addToast(`Activating eSIM for ${esim.subscriberName}!`, "success")}
-                          className="px-3.5 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-100 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
-                        >
-                          <Zap className="w-3 h-3" /> Activate
-                        </button>
-                      ) : esim.status === "Suspended" ? (
-                        <button
-                          onClick={() => addToast(`Reactivating eSIM for ${esim.subscriberName}!`, "success")}
-                          className="px-3.5 py-2 bg-blue-50 border border-blue-200 rounded-xl text-[10px] font-black text-blue-600 uppercase tracking-widest hover:bg-blue-100 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
-                        >
-                          <Power className="w-3 h-3" /> Reactivate
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => addToast(`Removing expired profile ${esim.id}...`, "error" as const)}
-                          className="px-3.5 py-2 bg-rose-50 border border-rose-200 rounded-xl text-[10px] font-black text-rose-600 uppercase tracking-widest hover:bg-rose-100 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
-                        >
-                          <Trash2 className="w-3 h-3" /> Remove
-                        </button>
-                      )}
+                      
+                      <button
+                        onClick={() => handleToggleStatus(esim.id, esim.status, esim.subscriberName)}
+                        className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 border ${
+                          esim.status === "Active" ? "bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100" :
+                          "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"
+                        }`}
+                      >
+                        <Power className="w-3 h-3" />
+                        {esim.status === "Active" ? "Suspend" : "Activate"}
+                      </button>
+
+                      <button
+                        onClick={() => handleRemoveProfile(esim.id, esim.subscriberName)}
+                        className="px-2.5 py-2 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
+                        title="Remove Profile"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Card Footer */}
                 <div className="mt-3 pt-3 border-t border-[#dcdcdc]/50 flex items-center justify-between">
-                  <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                     Activated {esim.activationDate} · Expires {esim.expiryDate} · ID: {esim.id}
                   </p>
-                  <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">{esim.carrier}</span>
+                  <span className="text-[9px] font-black text-[#04a1c6] uppercase tracking-widest">{esim.carrier}</span>
                 </div>
               </motion.div>
             );
@@ -321,21 +496,250 @@ export default function NetworkProviderESIMPage() {
               <Signal className="w-5 h-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Network Coverage</p>
-              <p className="text-sm font-black text-[#0f172a]">5G Ultra Wideband · 5G Sub-6 · LTE Advanced · LTE Cat-M1</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Carrier Network Infrastructure</p>
+              <p className="text-sm font-black text-[#0f172a]">5G Ultra Wideband · 5G Sub-6 · eSIM SM-DP+ Server Online</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => addToast("Downloading eSIM audit report...", "info")}
-              className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 rounded-xl border border-[#dcdcdc] text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
+              onClick={handleExportAudit}
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 rounded-xl border border-[#dcdcdc] text-[10px] font-black text-slate-600 uppercase tracking-widest hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
             >
-              <Download className="w-3.5 h-3.5" /> Export Audit
+              <Download className="w-3.5 h-3.5" /> Export Audit CSV
             </button>
           </div>
         </div>
       </div>
 
+      {/* ── Provision New eSIM Modal ── */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            onClick={handleCloseProvisionModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-7 md:p-9 shadow-2xl relative border border-white/50 space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-[#0f172a] uppercase tracking-tight">Provision New eSIM Profile</h3>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Issue SM-DP+ activation code &amp; assign carrier plan</p>
+                  </div>
+                </div>
+                <button onClick={handleCloseProvisionModal} className="p-2 rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleProvisionSubmit} className="space-y-5">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Subscriber Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={subscriberName}
+                    onChange={(e) => setSubscriberName(e.target.value)}
+                    placeholder="e.g. Sarah Jenkins"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Device Model</label>
+                    <select
+                      value={deviceModel}
+                      onChange={(e) => setDeviceModel(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      {["iPhone 18 Pro Max", "iPhone 17 Pro", "Galaxy S26 Ultra", "Galaxy Z Fold 6", "Pixel 10 Pro XL", "BYOD Device"].map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Target Carrier Network</label>
+                    <select
+                      value={carrier}
+                      onChange={(e) => setCarrier(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      {["SelectMobile Network", "Mint Mobile Partner", "Visible+ Partner", "AT&T Prepaid", "Koodo Flanker"].map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">eSIM Plan Tier</label>
+                    <select
+                      value={planType}
+                      onChange={(e) => setPlanType(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      {["Cross-Border Unlimited 5G", "5G High Speed 50GB", "Mint Unlimited 40GB", "AT&T Prepaid 15GB", "Koodo 20GB Canada"].map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Target Coverage Region</label>
+                    <select
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      <option value="US/CA">🇺🇸🇨🇦 Cross-Border US &amp; CA</option>
+                      <option value="US">🇺🇸 United States Domestic</option>
+                      <option value="CA">🇨🇦 Canada Domestic</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Monthly Data (GB)</label>
+                    <input
+                      type="number"
+                      min={5}
+                      max={200}
+                      value={dataTotalGB}
+                      onChange={(e) => setDataTotalGB(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">MSISDN / Phone Number (Optional)</label>
+                    <input
+                      type="text"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+1 (555) 000-0000"
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Target Device IMEI (Optional)</label>
+                    <input
+                      type="text"
+                      maxLength={15}
+                      value={imei}
+                      onChange={(e) => setImei(e.target.value.replace(/\D/g, ""))}
+                      placeholder="15-digit IMEI"
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Simulated SM-DP+ Server Info */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-black text-[#0f172a]">
+                    <ShieldCheck className="w-4 h-4 text-[#04a1c6]" /> SM-DP+ Server Status: ONLINE
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold">An encrypted GSMA eSIM activation QR code will be generated upon provisioning.</p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={provisioning}
+                  className="w-full py-4 rounded-2xl bg-[#0f172a] text-white font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10 cursor-pointer active:scale-95 mt-4"
+                >
+                  {provisioning ? "Provisioning Profile..." : "Provision & Issue eSIM"}
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── eSIM Details Modal ── */}
+      <AnimatePresence>
+        {selectedDetail && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            onClick={() => setSelectedDetail(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] max-w-lg w-full p-7 shadow-2xl relative border border-white/50 space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-[#0f172a] uppercase">{selectedDetail.subscriberName}</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">eSIM Profile #{selectedDetail.id}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedDetail(null)} className="p-2 rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* QR Activation Preview */}
+              <div className="p-6 bg-slate-900 text-white rounded-3xl text-center space-y-3">
+                <div className="w-32 h-32 bg-white p-2 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
+                  <QrCode className="w-28 h-28 text-slate-900" />
+                </div>
+                <div className="text-[10px] font-mono font-bold text-cyan-400 break-all px-2">
+                  {selectedDetail.lpaString || `LPA:1$smdp.selectmobile.com$${selectedDetail.id}`}
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Scan in iOS or Android Cellular Settings to Activate</p>
+              </div>
+
+              <div className="space-y-2 text-xs font-bold">
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-400 uppercase text-[10px]">ICCID</span>
+                  <span className="text-slate-900 font-mono text-[11px]">{selectedDetail.iccid}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-400 uppercase text-[10px]">Device IMEI</span>
+                  <span className="text-slate-900 font-mono text-[11px]">{selectedDetail.imei}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-400 uppercase text-[10px]">Phone Number</span>
+                  <span className="text-[#04a1c6] font-mono text-[11px]">{selectedDetail.phoneNumber}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-400 uppercase text-[10px]">Carrier &amp; Network</span>
+                  <span className="text-slate-900 text-[11px]">{selectedDetail.carrier} ({selectedDetail.network})</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedDetail(null)}
+                className="w-full py-3.5 rounded-2xl bg-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-colors"
+              >
+                Close Profile
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -201,17 +201,20 @@ export default function IndividualSettingsPage() {
                 
                 <div className="p-6 rounded-2xl border border-gray-100 bg-gray-50/50 flex items-center justify-between group hover:border-[#04a1c6]/30 transition-all cursor-pointer">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-xl border border-gray-100 flex items-center justify-center shadow-sm">
-                      <Smartphone className="w-6 h-6 text-gray-400" />
+                    <div className="w-12 h-12 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-center shadow-sm text-indigo-600">
+                      <CreditCard className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="font-bold text-[#0f172a]">PayPal</p>
-                      <p className="text-xs text-gray-500">user@example.com</p>
+                      <p className="font-bold text-[#0f172a] flex items-center gap-2">
+                        Stripe Express Account
+                        <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">Direct Deposit</span>
+                      </p>
+                      <p className="text-xs text-slate-500 font-medium">Chase Bank ···· 4821 (Stripe Payouts Verified)</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-md">Primary</span>
-                    <button className="p-2 text-gray-400 hover:text-rose-500 transition-colors cursor-pointer">
+                    <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-md border border-emerald-200">Connected ✓</span>
+                    <button className="p-2 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer" title="Manage Stripe Settings">
                       <LogOut className="w-4 h-4 rotate-180" />
                     </button>
                   </div>

@@ -12,7 +12,7 @@ const STATS = [
 ];
 
 const ACTIONS = [
-  { label: "Create New Listing", desc: "Add product to your store", icon: Plus, href: "/retailer/dashboard/listings/new", color: "text-blue-600 bg-blue-50" },
+  { label: "Create New Listing", desc: "Add product to your store", icon: Plus, href: "/retailer/dashboard/listings", color: "text-blue-600 bg-blue-50" },
   { label: "Market Research", desc: "Check trending prices", icon: Search, href: "/normal-order", color: "text-cyan-600 bg-cyan-50" },
   { label: "Sales Report", desc: "Detailed performance audit", icon: BarChart3, href: "/retailer/dashboard/analytics", color: "text-purple-600 bg-purple-50" },
   { label: "Verified Status", desc: "Update your credentials", icon: ShieldCheck, href: "/retailer/dashboard/settings", color: "text-emerald-600 bg-emerald-50" },

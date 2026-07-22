@@ -809,18 +809,37 @@ export default function WholesalerInventoryPage() {
               </div>
 
               <form onSubmit={handleManageSubmit} className="flex-1 overflow-y-auto p-8 space-y-8">
-                {/* Status Toggle */}
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-3">Listing Status</label>
-                  <select 
-                    value={managingItem.status}
-                    onChange={(e) => setManagingItem({...managingItem, status: (e.target.value as "In Stock" | "Low Stock" | "Out of Stock")})}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-[#0f172a] outline-none focus:border-blue-500 transition-colors uppercase tracking-widest"
-                  >
-                    <option value="In Stock">In Stock</option>
-                    <option value="Low Stock">Low Stock</option>
-                    <option value="Out of Stock">Out of Stock</option>
-                  </select>
+                {/* Status & Region Toggles */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-3">Listing Status</label>
+                    <select 
+                      value={managingItem.status}
+                      onChange={(e) => setManagingItem({...managingItem, status: (e.target.value as "In Stock" | "Low Stock" | "Out of Stock")})}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-[#0f172a] outline-none focus:border-blue-500 transition-colors uppercase tracking-widest"
+                    >
+                      <option value="In Stock">In Stock</option>
+                      <option value="Low Stock">Low Stock</option>
+                      <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-3">Distribution Region</label>
+                    <select 
+                      value={managingItem.warehouse.includes("Canada") || managingItem.warehouse.includes("CA") ? "CA" : "US/CA"}
+                      onChange={(e) => {
+                        const reg = e.target.value;
+                        const whName = reg === "US/CA" ? "US & CA Cross-Border Warehouse" : reg === "US" ? "US Central Warehouse" : "Canada Hub Toronto";
+                        setManagingItem({...managingItem, warehouse: whName});
+                      }}
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-[#0f172a] outline-none focus:border-blue-500 transition-colors uppercase tracking-widest"
+                    >
+                      <option value="US/CA">🇺🇸🇨🇦 US &amp; CA (Cross-Border)</option>
+                      <option value="US">🇺🇸 United States Warehouse</option>
+                      <option value="CA">🇨🇦 Canada Warehouse</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Stock Management */}

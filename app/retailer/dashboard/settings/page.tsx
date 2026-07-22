@@ -348,15 +348,18 @@ function PayoutBankingForm() {
                 <SectionHeader title="Connected Institutions" subtitle="Payouts are automatically routed to your verified business accounts." />
                 <div className="p-10 border border-slate-100 rounded-[3rem] bg-white flex flex-col md:flex-row items-center justify-between gap-8 group hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center gap-8">
-                        <div className="p-6 bg-slate-50 rounded-2xl text-emerald-600 group-hover:bg-emerald-50 transition-colors duration-500">
-                            <Building2 className="w-10 h-10" />
+                        <div className="p-6 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:bg-indigo-100 transition-colors duration-500">
+                            <CreditCard className="w-10 h-10" />
                         </div>
                         <div>
-                            <h5 className="text-xl font-extrabold text-[#0f172a] tracking-tight">CHASE BUSINESS CHECKING</h5>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1.5 leading-none">BANKING ••• 9904 (VERIFIED)</p>
+                            <h5 className="text-xl font-extrabold text-[#0f172a] tracking-tight flex items-center gap-2">
+                              STRIPE EXPRESS ACCOUNT
+                              <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">Stripe Connect</span>
+                            </h5>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1.5 leading-none">CHASE BUSINESS CHECKING ••• 9904 (STRIPE PAYOUTS VERIFIED)</p>
                         </div>
                     </div>
-                    <button className="px-10 py-4 border-2 border-slate-100 text-[#0f172a] rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-[#0f172a] hover:text-white hover:border-[#0f172a] transition-all cursor-pointer">Modify Account</button>
+                    <button className="px-10 py-4 border-2 border-slate-100 text-[#0f172a] rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-[#0f172a] hover:text-white hover:border-[#0f172a] transition-all cursor-pointer">Manage Stripe Express</button>
                 </div>
             </div>
         </div>

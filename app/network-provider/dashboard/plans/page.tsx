@@ -6,7 +6,7 @@ import {
   Users, TrendingUp, BarChart3,
   Eye, Settings2, Power,
   Check, Info, X, Zap,
-  SlidersHorizontal, Crown, Shield
+  SlidersHorizontal, Crown, Shield, Trash2, CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,8 +28,8 @@ interface ServicePlan {
   features: string[];
 }
 
-// --- Mock Data ---
-const MOCK_PLANS: ServicePlan[] = [
+// --- Pre-seeded Initial Data ---
+const INITIAL_PLANS: ServicePlan[] = [
   {
     id: "PLN-001",
     name: "5G Unlimited Max",
@@ -141,9 +141,27 @@ const statusConfig = {
 };
 
 export default function NetworkProviderPlansPage() {
+  const [plans, setPlans] = useState<ServicePlan[]>(INITIAL_PLANS);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("All");
   const [toasts, setToasts] = useState<{id: number; msg: string; type: "success" | "error" | "info"}[]>([]);
+  
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<ServicePlan | null>(null);
+
+  // Form State
+  const [name, setName] = useState("");
+  const [tier, setTier] = useState<"Premium" | "Standard" | "Budget">("Standard");
+  const [network, setNetwork] = useState("5G Sub-6");
+  const [dataGB, setDataGB] = useState("50 GB");
+  const [speed, setSpeed] = useState("Up to 500 Mbps");
+  const [voiceMinutes, setVoiceMinutes] = useState("Unlimited");
+  const [textMessages, setTextMessages] = useState("Unlimited");
+  const [hotspot, setHotspot] = useState("25 GB");
+  const [price, setPrice] = useState("");
+  const [featuresText, setFeaturesText] = useState("5G Access, HD Streaming, WiFi Calling");
+  const [creating, setCreating] = useState(false);
 
   const addToast = (msg: string, type: "success" | "error" | "info" = "success") => {
     const id = Date.now();
@@ -152,7 +170,7 @@ export default function NetworkProviderPlansPage() {
   };
 
   const searchLower = searchQuery.toLowerCase();
-  const filteredPlans = MOCK_PLANS.filter(plan => {
+  const filteredPlans = plans.filter(plan => {
     const matchesSearch =
       plan.name.toLowerCase().includes(searchLower) ||
       plan.id.toLowerCase().includes(searchLower) ||
@@ -161,9 +179,103 @@ export default function NetworkProviderPlansPage() {
     return matchesSearch && matchesTab;
   });
 
-  const totalSubscribers = MOCK_PLANS.reduce((sum, p) => sum + p.subscriberCount, 0);
-  const activePlans = MOCK_PLANS.filter(p => p.status === "Active").length;
+  const totalSubscribers = plans.reduce((sum, p) => sum + p.subscriberCount, 0);
+  const activePlans = plans.filter(p => p.status === "Active").length;
   const arpu = "$48.20";
+
+  const handleOpenCreateModal = () => {
+    setEditingPlan(null);
+    setName("");
+    setPrice("");
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (plan: ServicePlan) => {
+    setEditingPlan(plan);
+    setName(plan.name);
+    setTier(plan.tier);
+    setNetwork(plan.network);
+    setDataGB(plan.dataGB);
+    setSpeed(plan.speed);
+    setVoiceMinutes(plan.voiceMinutes);
+    setTextMessages(plan.textMessages);
+    setHotspot(plan.hotspot);
+    setPrice(plan.price.toString());
+    setFeaturesText(plan.features.join(", "));
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingPlan(null);
+  };
+
+  const handleSavePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !price) {
+      addToast("Please provide a plan name and monthly price.", "error");
+      return;
+    }
+
+    setCreating(true);
+    await new Promise(r => setTimeout(r, 600));
+
+    const featuresList = featuresText.split(",").map(f => f.trim()).filter(Boolean);
+
+    if (editingPlan) {
+      // Edit mode
+      setPlans(prev => prev.map(p => p.id === editingPlan.id ? {
+        ...p,
+        name,
+        tier,
+        network,
+        dataGB,
+        speed,
+        voiceMinutes,
+        textMessages,
+        hotspot,
+        price: Number(price),
+        features: featuresList,
+      } : p));
+      addToast(`Updated service plan "${name}"!`, "success");
+    } else {
+      // Create mode
+      const newPlanId = `PLN-00${plans.length + 1}`;
+      const newPlan: ServicePlan = {
+        id: newPlanId,
+        name,
+        tier,
+        network,
+        dataGB,
+        speed,
+        voiceMinutes,
+        textMessages,
+        hotspot,
+        price: Number(price),
+        subscriberCount: 0,
+        revenue: "$0",
+        status: "Active",
+        features: featuresList.length > 0 ? featuresList : ["5G Access", "No Contract", "WiFi Calling"],
+      };
+
+      setPlans(prev => [newPlan, ...prev]);
+      addToast(`Created service plan ${newPlanId} ("${name}")!`, "success");
+    }
+
+    setCreating(false);
+    handleCloseModal();
+  };
+
+  const handleToggleStatus = (id: string, currentStatus: ServicePlan["status"], planName: string) => {
+    const nextStatus: ServicePlan["status"] = currentStatus === "Active" ? "Archived" : "Active";
+    setPlans(prev => prev.map(p => p.id === id ? { ...p, status: nextStatus } : p));
+    addToast(`${planName} set to ${nextStatus}.`, nextStatus === "Active" ? "success" : "info");
+  };
+
+  const handleDeletePlan = (id: string, planName: string) => {
+    setPlans(prev => prev.filter(p => p.id !== id));
+    addToast(`Deleted plan "${planName}".`, "error");
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 antialiased font-sans pb-20 relative">
@@ -197,11 +309,11 @@ export default function NetworkProviderPlansPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#0f172a] uppercase tracking-tight">Service Plans</h1>
+          <h1 className="text-2xl font-black text-[#0f172a] uppercase tracking-tight">Service Plans Engine</h1>
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure data, voice, and text packages for the marketplace</p>
         </div>
         <button
-          onClick={() => addToast("Plan creation wizard launched...", "info")}
+          onClick={handleOpenCreateModal}
           className="flex items-center gap-2 px-6 py-3 bg-[#0f172a] text-white rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Create Plan
@@ -211,7 +323,7 @@ export default function NetworkProviderPlansPage() {
       {/* KPI Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Plans", value: MOCK_PLANS.length.toString(), icon: Layers, color: "text-blue-500", bg: "bg-blue-50" },
+          { label: "Total Plans", value: plans.length.toString(), icon: Layers, color: "text-blue-500", bg: "bg-blue-50" },
           { label: "Active Subscribers", value: totalSubscribers.toLocaleString(), icon: Users, color: "text-emerald-500", bg: "bg-emerald-50" },
           { label: "Avg. Revenue/User", value: arpu, icon: TrendingUp, color: "text-violet-500", bg: "bg-violet-50" },
           { label: "Active Plans", value: activePlans.toString(), icon: BarChart3, color: "text-amber-500", bg: "bg-amber-50" }
@@ -256,7 +368,10 @@ export default function NetworkProviderPlansPage() {
                 className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-[#dcdcdc] rounded-xl text-sm font-bold text-[#0f172a] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
             </div>
-            <button className="p-2.5 bg-white border border-[#dcdcdc] rounded-xl text-slate-400 hover:text-[#0f172a] hover:border-slate-300 shadow-sm transition-all cursor-pointer active:scale-95">
+            <button 
+              onClick={() => setSearchQuery("")}
+              className="p-2.5 bg-white border border-[#dcdcdc] rounded-xl text-slate-400 hover:text-[#0f172a] hover:border-slate-300 shadow-sm transition-all cursor-pointer active:scale-95"
+            >
               <SlidersHorizontal className="w-4 h-4" />
             </button>
           </div>
@@ -266,12 +381,18 @@ export default function NetworkProviderPlansPage() {
       {/* Plan Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {filteredPlans.length === 0 ? (
-          <div className="col-span-full bg-white rounded-3xl border border-[#dcdcdc] p-24 text-center shadow-sm">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#dcdcdc]">
+          <div className="col-span-full bg-white rounded-3xl border border-[#dcdcdc] p-20 text-center shadow-sm space-y-4">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-[#dcdcdc]">
               <Layers className="w-10 h-10 text-slate-300" />
             </div>
-            <h3 className="text-xl font-extrabold text-[#0f172a] mb-2 uppercase tracking-wide">No Plans Found</h3>
+            <h3 className="text-xl font-extrabold text-[#0f172a] uppercase tracking-wide">No Plans Found</h3>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Adjust your filters or create a new service plan</p>
+            <button
+              onClick={handleOpenCreateModal}
+              className="px-6 py-3 bg-[#0f172a] text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 inline mr-2" /> Create Service Plan
+            </button>
           </div>
         ) : (
           filteredPlans.map((plan, idx) => {
@@ -284,8 +405,8 @@ export default function NetworkProviderPlansPage() {
                 key={plan.id}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.06 }}
-                className="bg-white border border-[#dcdcdc] rounded-2xl shadow-sm hover:shadow-lg hover:border-blue-100 transition-all duration-300 group flex flex-col"
+                transition={{ delay: idx * 0.05 }}
+                className="bg-white border border-[#dcdcdc] rounded-2xl shadow-sm hover:shadow-lg hover:border-blue-100 transition-all duration-300 group flex flex-col justify-between"
               >
                 {/* Card Header */}
                 <div className="p-5 pb-0">
@@ -361,25 +482,14 @@ export default function NetworkProviderPlansPage() {
                 <div className="px-5 pb-5 pt-2 border-t border-[#dcdcdc]/50 mt-auto">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => addToast(`Opening editor for ${plan.name}...`, "info")}
+                      onClick={() => handleOpenEditModal(plan)}
                       className="flex-1 px-3 py-2.5 bg-slate-50 border border-[#dcdcdc] rounded-xl text-[10px] font-black text-[#0f172a] uppercase tracking-widest hover:bg-slate-100 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
                     >
                       <Settings2 className="w-3 h-3" /> Edit
                     </button>
+                    
                     <button
-                      onClick={() => addToast(`Viewing ${plan.subscriberCount.toLocaleString()} subscribers...`, "info")}
-                      className="flex-1 px-3 py-2.5 bg-slate-50 border border-[#dcdcdc] rounded-xl text-[10px] font-black text-[#0f172a] uppercase tracking-widest hover:bg-slate-100 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
-                    >
-                      <Eye className="w-3 h-3" /> Subs
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (plan.status === "Active") {
-                          addToast(`${plan.name} archived.`, "error");
-                        } else {
-                          addToast(`${plan.name} activated!`, "success");
-                        }
-                      }}
+                      onClick={() => handleToggleStatus(plan.id, plan.status, plan.name)}
                       className={`flex-1 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 ${
                         plan.status === "Active"
                           ? "bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-100"
@@ -388,6 +498,14 @@ export default function NetworkProviderPlansPage() {
                     >
                       <Power className="w-3 h-3" /> {plan.status === "Active" ? "Archive" : "Activate"}
                     </button>
+
+                    <button
+                      onClick={() => handleDeletePlan(plan.id, plan.name)}
+                      className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
+                      title="Delete Plan"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -395,6 +513,204 @@ export default function NetworkProviderPlansPage() {
           })
         )}
       </div>
+
+      {/* ── Create / Edit Plan Modal ── */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            onClick={handleCloseModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-7 md:p-9 shadow-2xl relative border border-white/50 space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#0f172a] text-white flex items-center justify-center">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-[#0f172a] uppercase tracking-tight">
+                      {editingPlan ? "Edit Service Plan" : "Create New Service Plan"}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                      {editingPlan ? `Update settings for ${editingPlan.id}` : "Configure data & pricing options for eSIM subscribers"}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={handleCloseModal} className="p-2 rounded-xl bg-slate-100 text-slate-400 hover:bg-slate-200 cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSavePlan} className="space-y-5">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Plan Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. 5G Cross-Border Unlimited Pro"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Tier Level</label>
+                    <select
+                      value={tier}
+                      onChange={(e) => setTier(e.target.value as "Premium" | "Standard" | "Budget")}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      <option value="Premium">👑 Premium</option>
+                      <option value="Standard">🛡️ Standard</option>
+                      <option value="Budget">⚡ Budget</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Network Tech</label>
+                    <select
+                      value={network}
+                      onChange={(e) => setNetwork(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      {["5G Ultra Wideband", "5G Sub-6", "5G / LTE", "LTE Advanced", "LTE Cat-M1"].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Coverage Region</label>
+                    <select
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      <option value="US/CA">🇺🇸🇨🇦 US &amp; CA</option>
+                      <option value="US">🇺🇸 US Only</option>
+                      <option value="CA">🇨🇦 CA Only</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Monthly Price ($)</label>
+                    <input
+                      type="number"
+                      required
+                      min={5}
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="e.g. 79"
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Data Allowance</label>
+                    <select
+                      value={dataGB}
+                      onChange={(e) => setDataGB(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      {["Unlimited", "100 GB", "75 GB", "50 GB", "20 GB", "5 GB"].map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Max Speed</label>
+                    <select
+                      value={speed}
+                      onChange={(e) => setSpeed(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      {["Up to 1 Gbps", "Up to 500 Mbps", "Up to 300 Mbps", "Up to 100 Mbps"].map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Voice Minutes</label>
+                    <select
+                      value={voiceMinutes}
+                      onChange={(e) => setVoiceMinutes(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      <option value="Unlimited">Unlimited</option>
+                      <option value="1,000 Mins">1,000 Mins</option>
+                      <option value="500 Mins">500 Mins</option>
+                      <option value="—">— (Data Only)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Text Messages</label>
+                    <select
+                      value={textMessages}
+                      onChange={(e) => setTextMessages(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      <option value="Unlimited">Unlimited</option>
+                      <option value="1,000 SMS">1,000 SMS</option>
+                      <option value="500 SMS">500 SMS</option>
+                      <option value="—">— (Data Only)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Hotspot Data</label>
+                    <select
+                      value={hotspot}
+                      onChange={(e) => setHotspot(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-900 focus:outline-none"
+                    >
+                      <option value="50 GB">50 GB</option>
+                      <option value="30 GB">30 GB</option>
+                      <option value="15 GB">15 GB</option>
+                      <option value="5 GB">5 GB</option>
+                      <option value="—">— None</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Feature Badges (Comma Separated)</label>
+                  <input
+                    type="text"
+                    value={featuresText}
+                    onChange={(e) => setFeaturesText(e.target.value)}
+                    placeholder="e.g. 5G UW, HD Streaming, 50GB Hotspot, International Text"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="w-full py-4 rounded-2xl bg-[#0f172a] text-white font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10 cursor-pointer active:scale-95 mt-4"
+                >
+                  {creating ? "Saving Plan..." : editingPlan ? "Update Plan Settings" : "Publish Service Plan"}
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
